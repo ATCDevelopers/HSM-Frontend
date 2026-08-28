@@ -30,6 +30,8 @@ function Dropdown({
                       className = "",
                       triggerClassName = "",
                       dropdownClassName = "",
+                      showChevron = true,
+                      triggerAriaLabel,
                   }) {
     const [isOpen, setIsOpen] = useState(false);
     const [coords, setCoords] = useState({top: 0, left: 0});
@@ -105,11 +107,13 @@ function Dropdown({
           hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500
           ${triggerClassName}
         `}
+                aria-label={triggerAriaLabel}
+                title={triggerAriaLabel}
                 aria-expanded={isOpen}
                 aria-haspopup="true"
             >
                 {trigger || children}
-                <ChevronDownIcon className="w-4 h-4" aria-hidden="true"/>
+                {showChevron && <ChevronDownIcon className="w-4 h-4" aria-hidden="true"/>}
             </button>
 
             {/* Menu — portaled to body so no ancestor overflow can clip it */}
