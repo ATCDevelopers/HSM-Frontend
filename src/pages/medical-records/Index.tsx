@@ -3,66 +3,39 @@ import { useNavigate } from "react-router-dom";
 import BaseLayout from "../../components/layouts/BaseLayout";
 import type { PatientListRow } from "./types";
 
+const PAGE_SIZE = 5;
+
 // TODO: replace with real apiClient.get('/emr/patients?search=...&page=...')
-async function mockFetchPatientList(
-  search: string,
-): Promise<{ rows: PatientListRow[]; total: number }> {
+async function mockFetchPatientList(search: string): Promise<PatientListRow[]> {
   await new Promise((res) => setTimeout(res, 300));
   const all: PatientListRow[] = [
-    {
-      patient_id: "PT-00125",
-      patient_name: "Jane Adams",
-      visit_id: "VIS-00231",
-      diagnosis: "Malaria",
-      bp: "120/80",
-      lab_test_count: 1,
-      prescription_count: 2,
-    },
-    {
-      patient_id: "PT-00124",
-      patient_name: "John Doe",
-      visit_id: "VIS-00230",
-      diagnosis: "Hypertension",
-      bp: "118/78",
-      lab_test_count: 2,
-      prescription_count: 3,
-    },
-    {
-      patient_id: "PT-00123",
-      patient_name: "Peter John",
-      visit_id: "VIS-00229",
-      diagnosis: "Pending",
-      bp: "125/82",
-      lab_test_count: 3,
-      prescription_count: 0,
-    },
-    {
-      patient_id: "PT-00122",
-      patient_name: "Amina Said",
-      visit_id: "VIS-00228",
-      diagnosis: "Migraine",
-      bp: "119/79",
-      lab_test_count: 1,
-      prescription_count: 0,
-    },
-    {
-      patient_id: "PT-00121",
-      patient_name: "David Paul",
-      visit_id: "VIS-00227",
-      diagnosis: "Diabetes",
-      bp: "130/85",
-      lab_test_count: 2,
-      prescription_count: 2,
-    },
+    { patient_id: "PT-00125", patient_name: "Jane Adams", visit_id: "VIS-00231", diagnosis: "Malaria", bp: "120/80", lab_test_count: 1, prescription_count: 2, status: "normal" },
+    { patient_id: "PT-00124", patient_name: "John Doe", visit_id: "VIS-00230", diagnosis: "Hypertension", bp: "185/122", lab_test_count: 2, prescription_count: 3, status: "critical" },
+    { patient_id: "PT-00123", patient_name: "Peter John", visit_id: "VIS-00229", diagnosis: "Pending", bp: "125/82", lab_test_count: 3, prescription_count: 0, status: "normal" },
+    { patient_id: "PT-00122", patient_name: "Amina Said", visit_id: "VIS-00228", diagnosis: "Migraine", bp: "119/79", lab_test_count: 1, prescription_count: 0, status: "normal" },
+    { patient_id: "PT-00121", patient_name: "David Paul", visit_id: "VIS-00227", diagnosis: "Diabetes", bp: "130/85", lab_test_count: 2, prescription_count: 2, status: "critical" },
+    { patient_id: "PT-00120", patient_name: "Grace Mushi", visit_id: "VIS-00226", diagnosis: "Asthma", bp: "118/76", lab_test_count: 1, prescription_count: 1, status: "normal" },
+    { patient_id: "PT-00119", patient_name: "Emmanuel Kessy", visit_id: "VIS-00225", diagnosis: "Pneumonia", bp: "190/128", lab_test_count: 4, prescription_count: 3, status: "critical" },
+    { patient_id: "PT-00118", patient_name: "Fatuma Rashid", visit_id: "VIS-00224", diagnosis: "Anemia", bp: "112/74", lab_test_count: 2, prescription_count: 1, status: "normal" },
+    { patient_id: "PT-00117", patient_name: "Baraka Mollel", visit_id: "VIS-00223", diagnosis: "Typhoid", bp: "121/80", lab_test_count: 3, prescription_count: 2, status: "normal" },
+    { patient_id: "PT-00116", patient_name: "Neema Shirima", visit_id: "VIS-00222", diagnosis: "Pending", bp: "117/78", lab_test_count: 1, prescription_count: 0, status: "normal" },
+    { patient_id: "PT-00115", patient_name: "Hassan Juma", visit_id: "VIS-00221", diagnosis: "Cardiac Arrhythmia", bp: "88/56", lab_test_count: 3, prescription_count: 2, status: "critical" },
+    { patient_id: "PT-00114", patient_name: "Zawadi Mkumbo", visit_id: "VIS-00220", diagnosis: "UTI", bp: "115/75", lab_test_count: 1, prescription_count: 1, status: "normal" },
+    { patient_id: "PT-00113", patient_name: "Godfrey Massawe", visit_id: "VIS-00219", diagnosis: "Gastritis", bp: "122/81", lab_test_count: 1, prescription_count: 1, status: "normal" },
+    { patient_id: "PT-00112", patient_name: "Salma Iddi", visit_id: "VIS-00218", diagnosis: "Severe Dehydration", bp: "82/54", lab_test_count: 2, prescription_count: 2, status: "critical" },
+    { patient_id: "PT-00111", patient_name: "Erick Mwakalinga", visit_id: "VIS-00217", diagnosis: "Sprained Ankle", bp: "120/78", lab_test_count: 0, prescription_count: 1, status: "normal" },
+    { patient_id: "PT-00110", patient_name: "Rehema Chacha", visit_id: "VIS-00216", diagnosis: "Pending", bp: "116/77", lab_test_count: 2, prescription_count: 0, status: "normal" },
+    { patient_id: "PT-00109", patient_name: "Isaya Mrema", visit_id: "VIS-00215", diagnosis: "Diabetic Ketoacidosis", bp: "95/60", lab_test_count: 4, prescription_count: 3, status: "critical" },
+    { patient_id: "PT-00108", patient_name: "Consolata Lyimo", visit_id: "VIS-00214", diagnosis: "Common Cold", bp: "118/79", lab_test_count: 0, prescription_count: 1, status: "normal" },
   ];
-  const filtered = search
+
+  return search
     ? all.filter(
         (p) =>
           p.patient_name.toLowerCase().includes(search.toLowerCase()) ||
-          p.patient_id.toLowerCase().includes(search.toLowerCase()),
+          p.patient_id.toLowerCase().includes(search.toLowerCase())
       )
     : all;
-  return { rows: filtered, total: 1002 };
 }
 
 const DIAGNOSIS_BADGE: Record<string, string> = {
@@ -73,19 +46,36 @@ const DEFAULT_BADGE = "bg-blue-100 text-blue-800";
 export default function MedicalRecordsIndex() {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
-  const [rows, setRows] = useState<PatientListRow[]>([]);
-  const [total, setTotal] = useState(0);
+  const [allRows, setAllRows] = useState<PatientListRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
 
   useEffect(() => {
     setLoading(true);
-    mockFetchPatientList(search).then(({ rows, total }) => {
-      setRows(rows);
-      setTotal(total);
+    mockFetchPatientList(search).then((rows) => {
+      // Critical patients surface first, per requested priority ordering.
+      const sorted = [...rows].sort((a, b) => {
+        if (a.status === b.status) return 0;
+        return a.status === "critical" ? -1 : 1;
+      });
+      setAllRows(sorted);
       setLoading(false);
     });
   }, [search]);
+
+  // Reset to page 1 whenever the search term changes, so a filtered result
+  // never lands on a page that no longer has any rows.
+  useEffect(() => {
+    setPage(1);
+  }, [search]);
+
+  const totalPages = Math.max(1, Math.ceil(allRows.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const pageRows = allRows.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
+  const goToPage = (p: number) => {
+    setPage(Math.min(Math.max(1, p), totalPages));
+  };
 
   return (
     <BaseLayout resourceName="Medical Records">
@@ -104,11 +94,7 @@ export default function MedicalRecordsIndex() {
               stroke="currentColor"
               strokeWidth={2}
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M21 21l-4.35-4.35M17 10.5a6.5 6.5 0 11-13 0 6.5 6.5 0 0113 0z"
-              />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 10.5a6.5 6.5 0 11-13 0 6.5 6.5 0 0113 0z" />
             </svg>
             <input
               type="text"
@@ -123,68 +109,43 @@ export default function MedicalRecordsIndex() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-100 bg-gray-50 text-left">
-                  <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-gray-400">
-                    Patients
-                  </th>
-                  <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-gray-400">
-                    Visits
-                  </th>
-                  <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-gray-400">
-                    Diagnosis
-                  </th>
-                  <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-gray-400">
-                    Vitals
-                  </th>
-                  <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-gray-400">
-                    Lab Tests
-                  </th>
-                  <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-gray-400">
-                    Prx
-                  </th>
-                  <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-gray-400">
-                    Action
-                  </th>
+                  <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-gray-400">Patients</th>
+                  <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-gray-400">Visits</th>
+                  <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-gray-400">Diagnosis</th>
+                  <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-gray-400">Vitals</th>
+                  <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-gray-400">Lab Tests</th>
+                  <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-gray-400">Prx</th>
+                  <th className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-gray-400">Status</th>
+                  <th className="px-4 py-2.5" />
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
                   <tr>
-                    <td
-                      colSpan={7}
-                      className="px-4 py-6 text-center text-sm text-gray-400"
-                    >
+                    <td colSpan={8} className="px-4 py-6 text-center text-sm text-gray-400">
                       Loading patients...
                     </td>
                   </tr>
-                ) : rows.length === 0 ? (
+                ) : pageRows.length === 0 ? (
                   <tr>
-                    <td
-                      colSpan={7}
-                      className="px-4 py-6 text-center text-sm text-gray-400"
-                    >
+                    <td colSpan={8} className="px-4 py-6 text-center text-sm text-gray-400">
                       No patients match your search.
                     </td>
                   </tr>
                 ) : (
-                  rows.map((row) => (
+                  pageRows.map((row) => (
                     <tr
                       key={row.patient_id}
-                      onClick={() =>
-                        navigate(`/medical-records/${row.patient_id}`)
-                      }
-                      className="cursor-pointer border-b border-gray-50 last:border-0 hover:bg-gray-50"
+                      onClick={() => navigate(`/medical-records/${row.patient_id}`)}
+                      className={`cursor-pointer border-b border-gray-50 last:border-0 hover:bg-gray-50 ${
+                        row.status === "critical" ? "bg-red-50/40" : ""
+                      }`}
                     >
                       <td className="px-4 py-3">
-                        <p className="font-semibold text-gray-900">
-                          {row.patient_name}
-                        </p>
-                        <p className="text-xs text-gray-400">
-                          {row.patient_id}
-                        </p>
+                        <p className="font-semibold text-gray-900">{row.patient_name}</p>
+                        <p className="text-xs text-gray-400">{row.patient_id}</p>
                       </td>
-                      <td className="px-4 py-3 text-gray-700">
-                        {row.visit_id}
-                      </td>
+                      <td className="px-4 py-3 text-gray-700">{row.visit_id}</td>
                       <td className="px-4 py-3">
                         <span
                           className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
@@ -195,16 +156,26 @@ export default function MedicalRecordsIndex() {
                         </span>
                       </td>
                       <td className="px-4 py-3 text-gray-700">{row.bp}</td>
-                      <td className="px-4 py-3 text-gray-700">
-                        {row.lab_test_count} Test
-                      </td>
-                      <td className="px-4 py-3 text-gray-700">
-                        {row.prescription_count}
+                      <td className="px-4 py-3 text-gray-700">{row.lab_test_count} Test</td>
+                      <td className="px-4 py-3 text-gray-700">{row.prescription_count}</td>
+                      <td className="px-4 py-3">
+                        <span
+                          className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold ${
+                            row.status === "critical"
+                              ? "bg-red-100 text-red-700"
+                              : "bg-green-100 text-green-700"
+                          }`}
+                        >
+                          <span
+                            className={`h-1.5 w-1.5 rounded-full ${
+                              row.status === "critical" ? "bg-red-500" : "bg-green-500"
+                            }`}
+                          />
+                          {row.status === "critical" ? "Critical" : "Normal"}
+                        </span>
                       </td>
                       <td className="px-4 py-3 text-right">
-                        <span className="font-semibold text-blue-600">
-                          View
-                        </span>
+                        <span className="font-semibold text-blue-600">View</span>
                       </td>
                     </tr>
                   ))
@@ -215,23 +186,44 @@ export default function MedicalRecordsIndex() {
 
           <div className="mt-3 flex items-center justify-between">
             <p className="text-xs text-gray-400">
-              Showing {rows.length} of {total} patients
+              {allRows.length === 0
+                ? "No patients found"
+                : `Showing ${(currentPage - 1) * PAGE_SIZE + 1}–${Math.min(
+                    currentPage * PAGE_SIZE,
+                    allRows.length
+                  )} of ${allRows.length} patients`}
             </p>
-            <div className="flex gap-1.5">
-              {[1, 2, 3].map((p) => (
+            {totalPages > 1 && (
+              <div className="flex items-center gap-1.5">
                 <button
-                  key={p}
-                  onClick={() => setPage(p)}
-                  className={`h-7 w-7 rounded-md text-xs font-semibold ${
-                    p === page
-                      ? "bg-blue-600 text-white"
-                      : "bg-white text-gray-600 hover:bg-gray-100"
-                  }`}
+                  onClick={() => goToPage(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="flex h-7 w-7 items-center justify-center rounded-md bg-white text-gray-500 hover:bg-gray-100 disabled:opacity-40"
+                  aria-label="Previous page"
                 >
-                  {p}
+                  ‹
                 </button>
-              ))}
-            </div>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                  <button
+                    key={p}
+                    onClick={() => goToPage(p)}
+                    className={`h-7 w-7 rounded-md text-xs font-semibold ${
+                      p === currentPage ? "bg-blue-600 text-white" : "bg-white text-gray-600 hover:bg-gray-100"
+                    }`}
+                  >
+                    {p}
+                  </button>
+                ))}
+                <button
+                  onClick={() => goToPage(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="flex h-7 w-7 items-center justify-center rounded-md bg-white text-gray-500 hover:bg-gray-100 disabled:opacity-40"
+                  aria-label="Next page"
+                >
+                  ›
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
