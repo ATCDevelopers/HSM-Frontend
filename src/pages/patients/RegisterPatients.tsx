@@ -5,6 +5,7 @@ import { Patient, readPatients, writePatients } from "./patientStorage";
 
 const inputFields = [
   ["firstName", "First name", "text"],
+  ["middleName", "Middle name", "text"],
   ["lastName", "Last name", "text"],
   ["email", "Email", "email"],
   ["phone", "Phone number", "tel"],
@@ -16,7 +17,7 @@ const inputFields = [
 export default function RegisterPatient() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    firstName: "", lastName: "", email: "", gender: "", dateOfBirth: "",
+    firstName: "", middleName: "", lastName: "", email: "", gender: "", dateOfBirth: "",
     bloodGroup: "", phone: "", nhifNumber: "", nationalId: "", photo: "",
   });
   const [error, setError] = useState("");

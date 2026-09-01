@@ -4,7 +4,7 @@ import BaseLayout from "../../components/layouts/BaseLayout";
 import { Patient, readPatients, writePatients } from "./patientStorage";
 
 const inputFields = [
-  ["firstName", "First name", "text"], ["lastName", "Last name", "text"],
+  ["firstName", "First name", "text"], ["middleName", "Middle name", "text"], ["lastName", "Last name", "text"],
   ["email", "Email", "email"], ["phone", "Phone number", "tel"],
   ["dateOfBirth", "Date of birth", "date"], ["nhifNumber", "NHIF number", "text"],
   ["nationalId", "National ID", "text"],
