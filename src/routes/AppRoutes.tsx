@@ -34,9 +34,6 @@ const Index = lazy(() => import("../pages/crud/Index"));
 const Show = lazy(() => import("../pages/crud/Show"));
 const Form = lazy(() => import("../pages/crud/Form"));
 
-feature/appointment
- 
-
 const MedicalHistory = lazy(() => import("../pages/medical-records/Index"));
 const VitalsForm = lazy(() => import("../pages/medical-records/VitalsForm"));
 const MedicalRecordsShow = lazy(() => import("../pages/medical-records/Show"));
@@ -46,7 +43,6 @@ const ConsultationForm = lazy(
 
 const ResourceIndex = Index as ComponentType<{ resource: string }>;
 const ResourceShow = Show as ComponentType<{ resource: string }>;
- develop
 
 /** Lightweight fallback shown while a lazily-loaded page chunk is fetched. */
 function RouteFallback() {
@@ -58,79 +54,6 @@ function RouteFallback() {
 }
 
 function AppRoutes() {
-
-feature/appointment
-    return (
-        <Suspense fallback={<RouteFallback/>}>
-            <Routes>
-                {/* Public (guest) routes */}
-                <Route path="/login" element={<Login/>}/>
-                <Route path="/register" element={<Register/>}/>
-
-                {/* Protected routes — require authentication */}
-                <Route
-                    element={
-                        <ProtectedRoute>
-                            <Outlet/>
-                        </ProtectedRoute>
-                    }
-                >
-                    {/* Home */}
-                    <Route path="/" element={<Home/>}/>
-
-                    {/* Dashboard */}
-                    <Route path="/dashboard" element={<Dashboard/>}/>
-                    <Route
-                        path="/appointments"
-                        element={<BaseLayout resourceName="Appointments"><DashboardPage /></BaseLayout>}
-                    />
-                    <Route
-                        path="/appointments/dashboard"
-                        element={<BaseLayout resourceName="Appointments"><DashboardPage /></BaseLayout>}
-                    />
-
-                    {/* Patients - CRUD routes */}
-                    <Route path="/patients" element={<Index resource="patients"/>}/>
-                    <Route path="/patients/new" element={<Form resource="patients"/>}/>
-                    <Route path="/patients/:id" element={<Show resource="patients"/>}/>
-                    <Route path="/patients/:id/edit" element={<Form resource="patients"/>}/>
-
-                    <Route
-                        path="/appointments/new"
-                        element={<BaseLayout resourceName="Appointments"><NewBookingPage /></BaseLayout>}
-                    />
-                    <Route
-                        path="/booking/new"
-                        element={<BaseLayout resourceName="Appointments"><NewBookingPage /></BaseLayout>}
-                    />
-                    <Route
-                        path="/appointments/schedule"
-                        element={<BaseLayout resourceName="Appointments"><DoctorSchedulePage /></BaseLayout>}
-                    />
-                    <Route
-                        path="/doctor/schedule"
-                        element={<BaseLayout resourceName="Appointments"><DoctorSchedulePage /></BaseLayout>}
-                    />
-                    <Route
-                        path="/appointments/history"
-                        element={<BaseLayout resourceName="Appointments"><PatientHistoryPage /></BaseLayout>}
-                    />
-                    <Route
-                        path="/patient/history"
-                        element={<BaseLayout resourceName="Appointments"><PatientHistoryPage /></BaseLayout>}
-                    />
-                    <Route
-                        path="/appointments/:id/status"
-                        element={<BaseLayout resourceName="Appointment Status"><AppointmentStatusPage /></BaseLayout>}
-                    />
-                    <Route
-                        path="/appointment/:id/status"
-                        element={<BaseLayout resourceName="Appointment Status"><AppointmentStatusPage /></BaseLayout>}
-                    />
-                </Route>
-            </Routes>
-        </Suspense>
-    );
   return (
     <Suspense fallback={<RouteFallback />}>
       <Routes>
@@ -151,6 +74,48 @@ feature/appointment
 
           {/* Dashboard */}
           <Route path="/dashboard" element={<Dashboard />} />
+
+          {/* Appointments */}
+          <Route
+            path="/appointments"
+            element={<BaseLayout resourceName="Appointments"><DashboardPage /></BaseLayout>}
+          />
+          <Route
+            path="/appointments/dashboard"
+            element={<BaseLayout resourceName="Appointments"><DashboardPage /></BaseLayout>}
+          />
+          <Route
+            path="/appointments/new"
+            element={<BaseLayout resourceName="Appointments"><NewBookingPage /></BaseLayout>}
+          />
+          <Route
+            path="/booking/new"
+            element={<BaseLayout resourceName="Appointments"><NewBookingPage /></BaseLayout>}
+          />
+          <Route
+            path="/appointments/schedule"
+            element={<BaseLayout resourceName="Appointments"><DoctorSchedulePage /></BaseLayout>}
+          />
+          <Route
+            path="/doctor/schedule"
+            element={<BaseLayout resourceName="Appointments"><DoctorSchedulePage /></BaseLayout>}
+          />
+          <Route
+            path="/appointments/history"
+            element={<BaseLayout resourceName="Appointments"><PatientHistoryPage /></BaseLayout>}
+          />
+          <Route
+            path="/patient/history"
+            element={<BaseLayout resourceName="Appointments"><PatientHistoryPage /></BaseLayout>}
+          />
+          <Route
+            path="/appointments/:id/status"
+            element={<BaseLayout resourceName="Appointment Status"><AppointmentStatusPage /></BaseLayout>}
+          />
+          <Route
+            path="/appointment/:id/status"
+            element={<BaseLayout resourceName="Appointment Status"><AppointmentStatusPage /></BaseLayout>}
+          />
 
           {/* Patients */}
           <Route path="/patients" element={<PatientManagement />} />
@@ -175,7 +140,6 @@ feature/appointment
       </Routes>
     </Suspense>
   );
-develop
 }
 
 export default AppRoutes;
