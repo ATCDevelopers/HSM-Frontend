@@ -22,7 +22,7 @@ export const NewBookingPage: React.FC = () => {
 
   return (
     <BaseLayout resourceName="Appointments">
-      <div className="rounded-3xl bg-gradient-to-br from-sky-50 via-white to-indigo-50 p-6 shadow-sm ring-1 ring-sky-100">
+      <div className="rounded-3xl bg-linear-to-br from-sky-50 via-white to-indigo-50 p-6 shadow-sm ring-1 ring-sky-100">
         <div className="mx-auto max-w-6xl">
           <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
@@ -40,7 +40,7 @@ export const NewBookingPage: React.FC = () => {
           </div>
 
           <div className="grid gap-6 xl:grid-cols-[0.85fr_1.35fr]">
-            <div className="rounded-3xl bg-gradient-to-br from-blue-600 via-indigo-600 to-violet-600 p-6 text-white shadow-lg shadow-blue-600/20">
+            <div className="rounded-3xl bg-linear-to-br from-blue-600 via-indigo-600 to-violet-600 p-6 text-white shadow-lg shadow-blue-600/20">
               <div className="inline-flex rounded-full bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-blue-100">
                 Fast care
               </div>

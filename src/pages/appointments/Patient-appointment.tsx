@@ -31,7 +31,7 @@ export const PatientHistoryPage: React.FC = () => {
 
   return (
     <BaseLayout resourceName="Appointments">
-      <div className="rounded-3xl bg-gradient-to-br from-indigo-50 via-white to-sky-50 p-6 shadow-sm ring-1 ring-indigo-100">
+      <div className="rounded-3xl bg-linear-to-br from-indigo-50 via-white to-sky-50 p-6 shadow-sm ring-1 ring-indigo-100">
         <div className="mx-auto max-w-6xl">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>

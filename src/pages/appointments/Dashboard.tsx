@@ -28,7 +28,7 @@ export const DashboardPage: React.FC = () => {
 
   return (
     <BaseLayout resourceName="Appointments">
-      <div className="rounded-3xl bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-6 shadow-sm ring-1 ring-blue-100">
+      <div className="rounded-3xl bg-linear-to-br from-blue-50 via-white to-indigo-50 p-6 shadow-sm ring-1 ring-blue-100">
         <div className="mx-auto max-w-6xl">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
@@ -118,7 +118,7 @@ export const DashboardPage: React.FC = () => {
                     <span className="font-semibold text-white">86%</span>
                   </div>
                   <div className="mt-2 h-2.5 rounded-full bg-white/10">
-                    <div className="h-2.5 w-[86%] rounded-full bg-gradient-to-r from-blue-400 to-cyan-300" />
+                    <div className="h-2.5 w-[86%] rounded-full bg-linear-to-r from-blue-400 to-cyan-300" />
                   </div>
                 </div>
 
@@ -128,7 +128,7 @@ export const DashboardPage: React.FC = () => {
                     <span className="font-semibold text-white">72%</span>
                   </div>
                   <div className="mt-2 h-2.5 rounded-full bg-white/10">
-                    <div className="h-2.5 w-[72%] rounded-full bg-gradient-to-r from-violet-400 to-indigo-300" />
+                    <div className="h-2.5 w-[72%] rounded-full bg-linear-to-r from-violet-400 to-indigo-300" />
                   </div>
                 </div>
               </div>
