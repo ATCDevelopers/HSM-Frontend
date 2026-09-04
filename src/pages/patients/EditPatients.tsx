@@ -2,6 +2,7 @@ import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import BaseLayout from "../../components/layouts/BaseLayout";
 import { Patient, readPatients, writePatients } from "./patientStorage";
+import { getTodayIsoDate, isValidPhoneNumber, phonePattern, sanitizeNumericInput, toDateInputValue } from "../../utils/inputValidation";
 
 const inputFields = [
   ["firstName", "First name", "text"], ["middleName", "Middle name", "text"], ["lastName", "Last name", "text"],
@@ -14,18 +15,33 @@ export default function EditPatients() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [formData, setFormData] = useState<Patient | null>(null);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     setFormData(readPatients().find((patient) => patient.id === id) || null);
   }, [id]);
 
   const handleChange = (event: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    if (formData) setFormData({ ...formData, [event.target.name]: event.target.value });
+    if (formData) {
+      const value = ["nhifNumber", "nationalId"].includes(event.target.name)
+        ? sanitizeNumericInput(event.target.value)
+        : event.target.value;
+      setFormData({ ...formData, [event.target.name]: value });
+      setError("");
+    }
   };
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!formData) return;
+    if (!formData.dateOfBirth || formData.dateOfBirth > getTodayIsoDate()) {
+      setError("Date of birth cannot be empty or in the future.");
+      return;
+    }
+    if (!isValidPhoneNumber(formData.phone)) {
+      setError("Enter a valid 10-digit phone number starting with 0.");
+      return;
+    }
     writePatients(readPatients().map((patient) => patient.id === formData.id ? formData : patient));
     navigate(`/patients/${formData.id}`);
   };
@@ -36,9 +52,9 @@ export default function EditPatients() {
     <BaseLayout resourceName="Edit Patient">
       <div className="rounded-2xl bg-blue-50 p-6"><div className="mx-auto max-w-4xl">
         <button onClick={() => navigate(`/patients/${formData.id}`)} className="mb-4 text-sm font-semibold text-blue-600 hover:text-blue-700">← Back to Patient Details</button>
-        <div className="rounded-2xl bg-white p-8 shadow-sm"><h1 className="text-lg font-bold text-gray-900">Edit Patient</h1><p className="mt-0.5 mb-6 text-sm text-gray-500">Update the registered patient information.</p>
+        <div className="rounded-2xl bg-white p-8 shadow-sm"><h1 className="text-lg font-bold text-gray-900">Edit Patient</h1><p className="mt-0.5 mb-6 text-sm text-gray-500">Update the registered patient information.</p>{error && <div className="mb-5 rounded-lg bg-red-50 p-3 text-sm text-red-600">{error}</div>}
           <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-5 md:grid-cols-2">
-            {inputFields.map(([name, label, type]) => <label key={name} className="text-sm font-medium text-gray-700">{label}<input required={["firstName", "lastName", "phone"].includes(name)} type={type} name={name} value={formData[name as keyof Patient] as string} onChange={handleChange} className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm font-normal outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20" /></label>)}
+            {inputFields.map(([name, label, type]) => <label key={name} className="text-sm font-medium text-gray-700">{label}<input required={["firstName", "lastName", "phone", "dateOfBirth"].includes(name)} type={type} name={name} value={type === "date" ? toDateInputValue(formData[name as keyof Patient] as string) : formData[name as keyof Patient] as string} onChange={handleChange} max={type === "date" ? getTodayIsoDate() : undefined} pattern={name === "phone" ? phonePattern : undefined} className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm font-normal outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20" /></label>)}
             <label className="text-sm font-medium text-gray-700">Gender<select required name="gender" value={formData.gender} onChange={handleChange} className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm font-normal outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"><option value="">Select gender</option><option>Male</option><option>Female</option><option>Other</option></select></label>
             <label className="text-sm font-medium text-gray-700">Blood group<select name="bloodGroup" value={formData.bloodGroup} onChange={handleChange} className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm font-normal outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"><option value="">Select blood group</option>{["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map((group) => <option key={group}>{group}</option>)}</select></label>
             <label className="text-sm font-medium text-gray-700">Status<select name="status" value={formData.status} onChange={handleChange} className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm font-normal outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"><option value="ACTIVE">Active</option><option value="DEACTIVE">Deactive</option></select></label>

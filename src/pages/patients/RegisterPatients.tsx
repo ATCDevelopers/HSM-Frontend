@@ -2,6 +2,7 @@ import { ChangeEvent, FormEvent, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import BaseLayout from "../../components/layouts/BaseLayout";
 import { Patient, readPatients, writePatients } from "./patientStorage";
+import { getTodayIsoDate, isValidPhoneNumber, phonePattern, sanitizeNumericInput } from "../../utils/inputValidation";
 
 const inputFields = [
   ["firstName", "First name", "text"],
@@ -23,7 +24,10 @@ export default function RegisterPatient() {
   const [error, setError] = useState("");
 
   const handleChange = (event: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setFormData({ ...formData, [event.target.name]: event.target.value });
+    const value = ["nhifNumber", "nationalId"].includes(event.target.name)
+      ? sanitizeNumericInput(event.target.value)
+      : event.target.value;
+    setFormData({ ...formData, [event.target.name]: value });
     setError("");
   };
 
@@ -39,6 +43,14 @@ export default function RegisterPatient() {
     event.preventDefault();
     if (!formData.firstName || !formData.lastName || !formData.gender || !formData.dateOfBirth || !formData.phone) {
       setError("Please fill in all required fields.");
+      return;
+    }
+    if (formData.dateOfBirth > getTodayIsoDate()) {
+      setError("Date of birth cannot be in the future.");
+      return;
+    }
+    if (!isValidPhoneNumber(formData.phone)) {
+      setError("Enter a valid 10-digit phone number starting with 0.");
       return;
     }
     const patients = readPatients();
@@ -65,8 +77,8 @@ export default function RegisterPatient() {
             <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-5 md:grid-cols-2">
               {inputFields.map(([name, label, type]) => (
                 <label key={name} className="text-sm font-medium text-gray-700">
-                  {label}{["firstName", "lastName", "phone"].includes(name) && <span className="ml-1 text-red-500">*</span>}
-                  <input type={type} name={name} value={formData[name]} onChange={handleChange} required={["firstName", "lastName", "phone"].includes(name)} className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm font-normal outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20" />
+                  {label}{["firstName", "lastName", "phone", "dateOfBirth"].includes(name) && <span className="ml-1 text-red-500">*</span>}
+                  <input type={type} name={name} value={formData[name]} onChange={handleChange} max={type === "date" ? getTodayIsoDate() : undefined} pattern={name === "phone" ? phonePattern : undefined} required={["firstName", "lastName", "phone", "dateOfBirth"].includes(name)} className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm font-normal outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20" />
                 </label>
               ))}
               <label className="text-sm font-medium text-gray-700">Gender<span className="ml-1 text-red-500">*</span>
