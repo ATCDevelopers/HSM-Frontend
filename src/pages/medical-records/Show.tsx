@@ -22,30 +22,208 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: "dx", label: "Diagnosis" },
 ];
 
-async function mockFetchPatientHeader(
-  patientId: string,
-): Promise<PatientHeader> {
-  await new Promise((res) => setTimeout(res, 200));
-  return {
-    patient_id: patientId,
+// Patient database
+const PATIENT_DATABASE: Record<
+  string,
+  {
+    name: string;
+    gender: string;
+    age: number;
+    phone: string;
+    diagnosis: string;
+    bp: string;
+  }
+> = {
+  "PT-00125": {
     name: "Jane Adams",
     gender: "Female",
     age: 24,
     phone: "+255 717 890 123",
+    diagnosis: "Malaria",
+    bp: "120/80",
+  },
+  "PT-00124": {
+    name: "John Doe",
+    gender: "Male",
+    age: 45,
+    phone: "+255 654 321 098",
+    diagnosis: "Hypertension",
+    bp: "185/122",
+  },
+  "PT-00123": {
+    name: "Peter John",
+    gender: "Male",
+    age: 38,
+    phone: "+255 712 345 678",
+    diagnosis: "Pending",
+    bp: "125/82",
+  },
+  "PT-00122": {
+    name: "Amina Said",
+    gender: "Female",
+    age: 31,
+    phone: "+255 789 012 345",
+    diagnosis: "Migraine",
+    bp: "119/79",
+  },
+  "PT-00121": {
+    name: "David Paul",
+    gender: "Male",
+    age: 55,
+    phone: "+255 723 456 789",
+    diagnosis: "Diabetes",
+    bp: "130/85",
+  },
+  "PT-00120": {
+    name: "Grace Mushi",
+    gender: "Female",
+    age: 28,
+    phone: "+255 701 234 567",
+    diagnosis: "Asthma",
+    bp: "118/76",
+  },
+  "PT-00119": {
+    name: "Emmanuel Kessy",
+    gender: "Male",
+    age: 52,
+    phone: "+255 715 678 901",
+    diagnosis: "Pneumonia",
+    bp: "190/128",
+  },
+  "PT-00118": {
+    name: "Fatuma Rashid",
+    gender: "Female",
+    age: 42,
+    phone: "+255 738 901 234",
+    diagnosis: "Anemia",
+    bp: "112/74",
+  },
+  "PT-00117": {
+    name: "Baraka Mollel",
+    gender: "Male",
+    age: 35,
+    phone: "+255 722 567 890",
+    diagnosis: "Typhoid",
+    bp: "121/80",
+  },
+  "PT-00116": {
+    name: "Neema Shirima",
+    gender: "Female",
+    age: 29,
+    phone: "+255 714 890 123",
+    diagnosis: "Pending",
+    bp: "117/78",
+  },
+  "PT-00115": {
+    name: "Hassan Juma",
+    gender: "Male",
+    age: 60,
+    phone: "+255 704 567 890",
+    diagnosis: "Cardiac Arrhythmia",
+    bp: "88/56",
+  },
+  "PT-00114": {
+    name: "Zawadi Mkumbo",
+    gender: "Female",
+    age: 33,
+    phone: "+255 719 234 567",
+    diagnosis: "UTI",
+    bp: "115/75",
+  },
+  "PT-00113": {
+    name: "Godfrey Massawe",
+    gender: "Male",
+    age: 48,
+    phone: "+255 706 789 012",
+    diagnosis: "Gastritis",
+    bp: "122/81",
+  },
+  "PT-00112": {
+    name: "Salma Iddi",
+    gender: "Female",
+    age: 26,
+    phone: "+255 710 345 678",
+    diagnosis: "Severe Dehydration",
+    bp: "82/54",
+  },
+  "PT-00111": {
+    name: "Erick Mwakalinga",
+    gender: "Male",
+    age: 34,
+    phone: "+255 725 678 901",
+    diagnosis: "Sprained Ankle",
+    bp: "120/78",
+  },
+  "PT-00110": {
+    name: "Rehema Chacha",
+    gender: "Female",
+    age: 41,
+    phone: "+255 708 901 234",
+    diagnosis: "Pending",
+    bp: "116/77",
+  },
+  "PT-00109": {
+    name: "Isaya Mrema",
+    gender: "Male",
+    age: 51,
+    phone: "+255 713 567 890",
+    diagnosis: "Diabetic Ketoacidosis",
+    bp: "95/60",
+  },
+  "PT-00108": {
+    name: "Consolata Lyimo",
+    gender: "Female",
+    age: 27,
+    phone: "+255 732 456 789",
+    diagnosis: "Common Cold",
+    bp: "118/79",
+  },
+};
+
+async function mockFetchPatientHeader(
+  patientId: string,
+): Promise<PatientHeader> {
+  await new Promise((res) => setTimeout(res, 200));
+  const patient = PATIENT_DATABASE[patientId];
+
+  if (!patient) {
+    return {
+      patient_id: patientId,
+      name: "Unknown Patient",
+      gender: "Unknown",
+      age: 0,
+      phone: "N/A",
+    };
+  }
+
+  return {
+    patient_id: patientId,
+    name: patient.name,
+    gender: patient.gender,
+    age: patient.age,
+    phone: patient.phone,
   };
 }
-async function mockFetchConsultations(): Promise<ConsultationRow[]> {
+async function mockFetchConsultations(
+  patientId: string,
+): Promise<ConsultationRow[]> {
+  const patient = PATIENT_DATABASE[patientId];
+  const diagnosis = patient?.diagnosis || "Unknown";
+
   return [
     {
       consultation_id: "c1",
       date: "19 Aug 2026",
       doctor_name: "Dr. Smith",
-      chief_complaint: "Fever and headache",
-      diagnosis: "Malaria",
-      history_of_present_illness: "No previous history recorded.",
+      chief_complaint: "Medical consultation",
+      diagnosis: diagnosis,
+      history_of_present_illness: "Patient presented for consultation.",
       physical_examination:
         "Patient alert; examination findings recorded by doctor.",
-      investigation_requirement: "Malaria test requested",
+      investigation_requirement:
+        diagnosis !== "Pending"
+          ? `${diagnosis} test requested`
+          : "Pending investigation",
       visit_id: "VIS-00231",
     },
     {
@@ -53,19 +231,22 @@ async function mockFetchConsultations(): Promise<ConsultationRow[]> {
       date: "05 Aug 2026",
       doctor_name: "Dr. Adams",
       chief_complaint: "Routine follow-up",
-      diagnosis: "Hypertension",
-      history_of_present_illness: "Managing blood pressure since 2024.",
-      physical_examination: "BP within target range on current medication.",
+      diagnosis: diagnosis,
+      history_of_present_illness: "Patient managing current condition.",
+      physical_examination: "Patient stable on current treatment.",
       investigation_requirement: "No further tests required",
       visit_id: "VIS-00220",
     },
   ];
 }
-async function mockFetchVitals(): Promise<VitalsRow[]> {
+async function mockFetchVitals(patientId: string): Promise<VitalsRow[]> {
+  const patient = PATIENT_DATABASE[patientId];
+  const bp = patient?.bp || "120/80";
+
   return [
     {
       date: "19 Aug 2026",
-      bp: "120/80",
+      bp: bp,
       temp: "37.2°C",
       hr: "75",
       rr: "18",
@@ -74,7 +255,7 @@ async function mockFetchVitals(): Promise<VitalsRow[]> {
     },
     {
       date: "05 Aug 2026",
-      bp: "118/78",
+      bp: bp,
       temp: "36.9°C",
       hr: "72",
       rr: "17",
@@ -83,18 +264,23 @@ async function mockFetchVitals(): Promise<VitalsRow[]> {
     },
   ];
 }
-async function mockFetchLabTests(): Promise<LabTestRow[]> {
+async function mockFetchLabTests(patientId: string): Promise<LabTestRow[]> {
+  const patient = PATIENT_DATABASE[patientId];
+  const testName = patient?.diagnosis || "General Test";
+
   return [
     {
       date: "19 Aug 2026",
-      test: "Malaria Test",
+      test: `${testName} Test`,
       status: "Completed",
-      result: "Positive",
+      result: "Results Available",
     },
-    { date: "05 Aug 2026", test: "CBC", status: "Pending", result: "---" },
+    { date: "05 Aug 2026", test: "CBC", status: "Completed", result: "Normal" },
   ];
 }
-async function mockFetchPrescriptions(): Promise<PrescriptionRow[]> {
+async function mockFetchPrescriptions(
+  patientId: string,
+): Promise<PrescriptionRow[]> {
   return [
     {
       date: "19 Aug 2026",
@@ -112,17 +298,20 @@ async function mockFetchPrescriptions(): Promise<PrescriptionRow[]> {
     },
   ];
 }
-async function mockFetchDiagnoses(): Promise<DiagnosisRow[]> {
+async function mockFetchDiagnoses(patientId: string): Promise<DiagnosisRow[]> {
+  const patient = PATIENT_DATABASE[patientId];
+  const diagnosis = patient?.diagnosis || "Unknown";
+
   return [
     {
       date: "19 Aug 2026",
-      diagnosis: "Malaria",
+      diagnosis: diagnosis,
       icd10: "B54",
       status: "Active",
     },
     {
       date: "05 Aug 2026",
-      diagnosis: "Hypertension",
+      diagnosis: diagnosis,
       icd10: "I10",
       status: "Active",
     },
@@ -151,11 +340,11 @@ export default function MedicalRecordsShow() {
 
   useEffect(() => {
     mockFetchPatientHeader(patientId).then(setHeader);
-    mockFetchConsultations().then(setConsultations);
-    mockFetchVitals().then(setVitals);
-    mockFetchLabTests().then(setLabTests);
-    mockFetchPrescriptions().then(setPrescriptions);
-    mockFetchDiagnoses().then(setDiagnoses);
+    mockFetchConsultations(patientId).then(setConsultations);
+    mockFetchVitals(patientId).then(setVitals);
+    mockFetchLabTests(patientId).then(setLabTests);
+    mockFetchPrescriptions(patientId).then(setPrescriptions);
+    mockFetchDiagnoses(patientId).then(setDiagnoses);
   }, [patientId]);
 
   const handleExportPdf = () => {
