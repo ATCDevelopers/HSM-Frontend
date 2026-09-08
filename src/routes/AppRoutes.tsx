@@ -44,6 +44,7 @@ const ConsultationForm = lazy(
 // Users module pages
 const UsersIndex = lazy(() => import("../pages/users/Index"));
 const RegisterUser = lazy(() => import("../pages/users/Register"));
+const UsersDashboard = lazy(() => import("../pages/users/Dashboard"));
 const NursePortal = lazy(() => import("../pages/users/NursePortal"));
 const PharmacyPortal = lazy(() => import("../pages/users/PharmacyPortal"));
 const LabPortal = lazy(() => import("../pages/users/LabPortal"));
@@ -152,6 +153,7 @@ function AppRoutes() {
 
           {/* Users */}
           <Route path="/users" element={<UsersIndex />} />
+          <Route path="/users/dashboard" element={<UsersDashboard />} />
           <Route path="/users/register" element={<RegisterUser />} />
           <Route path="/users/nurse" element={<BaseLayout resourceName="Nurse Portal"><NursePortal /></BaseLayout>} />
           <Route path="/users/pharmacy" element={<BaseLayout resourceName="Pharmacy Portal"><PharmacyPortal /></BaseLayout>} />
