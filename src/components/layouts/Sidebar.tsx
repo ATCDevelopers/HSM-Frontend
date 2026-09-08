@@ -15,9 +15,11 @@ import {
   Cog6ToothIcon,
   ArrowRightOnRectangleIcon,
   ChevronDownIcon,
+  XMarkIcon,
 } from "@heroicons/react/24/solid";
 import { useAuth } from "../../auth/AuthContext";
 import { modules, getModulesByRole } from "../../config/modules";
+import { useSidebar } from "../../contexts/SidebarContext";
 
 /**
  * Sidebar component that provides persistent navigation for the application.
@@ -132,14 +134,20 @@ function Sidebar() {
     activeRef.current?.scrollIntoView({ block: "nearest" });
   }, [location.pathname]);
 
+  const { open, toggle } = useSidebar();
+
   return (
     <>
-      <aside className="fixed left-0 top-0 h-full w-64 bg-[#173A5E] shadow-2xl z-40 flex flex-col">
+      {/* Mobile backdrop when sidebar is open */}
+      {open && <div className="fixed inset-0 bg-black/40 z-40 md:hidden" onClick={toggle} />}
+
+      <aside className={`fixed inset-y-0 left-0 h-full w-64 bg-[#173A5E] shadow-2xl z-50 transform transition-transform duration-200 ${open ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 flex flex-col`}>
         {/* Logo/Brand Section */}
         <div className="p-4 border-b border-white/10 h-20 relative z-20 bg-[#173A5E] flex items-center justify-center">
           <h1 className="text-3xl font-serif tracking-widest text-white">
             HMS
           </h1>
+          <button className="md:hidden absolute right-3 top-3 p-2 rounded-md text-white" onClick={toggle} aria-label="Close menu"><XMarkIcon className="w-5 h-5" /></button>
         </div>
 
         {/* Navigation Menu */}
@@ -149,6 +157,7 @@ function Sidebar() {
               <li key={item.path} ref={isActive(item) ? activeRef : null}>
                 <Link
                   to={item.path}
+                  onClick={() => { if (open && window.innerWidth < 768) toggle(); }}
                   className={`
                     flex items-center ${item.isChild ? 'pl-8 py-2' : 'p-3'} rounded-l-lg transition-all duration-200
                     ${

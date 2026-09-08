@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from "react";
-import { ChevronDownIcon } from "@heroicons/react/24/solid";
+import { ChevronDownIcon, Bars3Icon } from "@heroicons/react/24/solid";
 import Button from "../atoms/ui/Button";
 import Breadcrumb from "../atoms/ui/Breadcrumb";
 import { useAuth } from "../../auth/AuthContext";
+import { useSidebar } from "../../contexts/SidebarContext";
 
 /**
  * Header component that provides the main application header with navigation and actions.
@@ -55,6 +56,9 @@ function Header({
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
 
+  // Sidebar toggle (hamburger)
+  const { open: sidebarOpen, toggle: toggleSidebar } = useSidebar();
+
   // Close the dropdown when clicking anywhere outside it.
   useEffect(() => {
     function handleClickOutside(event) {
@@ -69,23 +73,30 @@ function Header({
   return (
     <div
       className={`
-				fixed top-0 left-64 right-0 z-50 
+				fixed top-0 right-0 z-50 
 				bg-white shadow-sm border-b border-gray-200
+				${sidebarOpen ? 'left-64' : 'left-0 md:left-64'}
 				${className}
 			`}
     >
       {/* Top Row: Title and Account Menu */}
       <div className="px-6 py-4">
         <div className="flex items-center justify-between">
-          {/* Title Section */}
-          <div>
-            {showResourceHeader ? (
-              <h1 className="text-xl font-bold text-gray-900">
-                {resourceName}
-              </h1>
-            ) : (
-              <h1 className="text-xl font-bold text-gray-900">Dashboard</h1>
-            )}
+          <div className="flex items-center">
+            {/* Hamburger for small screens */}
+            <button onClick={toggleSidebar} className="md:hidden p-2 mr-3 rounded-lg hover:bg-gray-100">
+              <Bars3Icon className="w-6 h-6 text-gray-700" />
+            </button>
+            {/* Title Section */}
+            <div>
+              {showResourceHeader ? (
+                <h1 className="text-xl font-bold text-gray-900">
+                  {resourceName}
+                </h1>
+              ) : (
+                <h1 className="text-xl font-bold text-gray-900">Dashboard</h1>
+              )}
+            </div>
           </div>
 
           {/* Account Dropdown */}
