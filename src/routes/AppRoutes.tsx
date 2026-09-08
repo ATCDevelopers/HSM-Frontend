@@ -41,6 +41,19 @@ const ConsultationForm = lazy(
   () => import("../pages/medical-records/ConsultationForm"),
 );
 
+// Users module pages
+const UsersIndex = lazy(() => import("../pages/users/Index"));
+const RegisterUser = lazy(() => import("../pages/users/Register"));
+const NursePortal = lazy(() => import("../pages/users/NursePortal"));
+const PharmacyPortal = lazy(() => import("../pages/users/PharmacyPortal"));
+const LabPortal = lazy(() => import("../pages/users/LabPortal"));
+const AdminPortal = lazy(() => import("../pages/users/AdminPortal"));
+const AccountantPortal = lazy(() => import("../pages/users/AccountantPortal"));
+const ClinicManagerPortal = lazy(() => import("../pages/users/ClinicManagerPortal"));
+const ReceptionPortal = lazy(() => import("../pages/users/ReceptionPortal"));
+const Profile = lazy(() => import("../pages/users/Profile"));
+const Notes = lazy(() => import("../pages/users/Notes"));
+
 const ResourceIndex = Index as ComponentType<{ resource: string }>;
 const ResourceShow = Show as ComponentType<{ resource: string }>;
 
@@ -136,6 +149,19 @@ function AppRoutes() {
             path="/medical-records/consultations/new"
             element={<ConsultationForm />}
           />
+
+          {/* Users */}
+          <Route path="/users" element={<UsersIndex />} />
+          <Route path="/users/register" element={<RegisterUser />} />
+          <Route path="/users/nurse" element={<BaseLayout resourceName="Nurse Portal"><NursePortal /></BaseLayout>} />
+          <Route path="/users/pharmacy" element={<BaseLayout resourceName="Pharmacy Portal"><PharmacyPortal /></BaseLayout>} />
+          <Route path="/users/lab" element={<BaseLayout resourceName="Lab Portal"><LabPortal /></BaseLayout>} />
+          <Route path="/users/admin" element={<BaseLayout resourceName="Admin Portal"><AdminPortal /></BaseLayout>} />
+          <Route path="/users/accountant" element={<BaseLayout resourceName="Accountant Portal"><AccountantPortal /></BaseLayout>} />
+          <Route path="/users/clinic-manager" element={<BaseLayout resourceName="Clinic Manager Portal"><ClinicManagerPortal /></BaseLayout>} />
+          <Route path="/users/reception" element={<BaseLayout resourceName="Reception Portal"><ReceptionPortal /></BaseLayout>} />
+          <Route path="/users/profile" element={<BaseLayout resourceName="Profile"><Profile /></BaseLayout>} />
+          <Route path="/users/notes" element={<BaseLayout resourceName="User Notes"><Notes /></BaseLayout>} />
         </Route>
       </Routes>
     </Suspense>
