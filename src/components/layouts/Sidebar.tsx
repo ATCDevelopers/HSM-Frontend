@@ -85,13 +85,29 @@ function Sidebar() {
 
   /**
    * Convert modules to menu items with icons
+   * Flatten children so each child becomes a visible menu entry (with smaller styling).
    */
-  const menuItems = accessibleModules.map((module) => ({
-    path: module.path,
-    label: module.name,
-    icon: iconMap[module.icon] || <HomeIcon className="w-5 h-5" />,
-    exact: module.path === "/",
-  }));
+  const menuItems = [] as any[];
+  accessibleModules.forEach((module) => {
+    menuItems.push({
+      path: module.path,
+      label: module.name,
+      icon: iconMap[module.icon] || <HomeIcon className="w-5 h-5" />,
+      exact: module.path === "/",
+      isChild: false,
+    });
+    if (module.children && module.children.length) {
+      module.children.forEach((child) => {
+        menuItems.push({
+          path: child.path,
+          label: child.name,
+          icon: iconMap[child.icon] || null,
+          exact: false,
+          isChild: true,
+        });
+      });
+    }
+  });
 
   /**
    * Determines if a menu item should be highlighted as active.
@@ -134,7 +150,7 @@ function Sidebar() {
                 <Link
                   to={item.path}
                   className={`
-                    flex items-center p-3 rounded-l-lg transition-all duration-200
+                    flex items-center ${item.isChild ? 'pl-8 py-2' : 'p-3'} rounded-l-lg transition-all duration-200
                     ${
                       isActive(item)
                         ? "bg-white/10 text-white border-l-2 border-blue-400"
@@ -143,7 +159,7 @@ function Sidebar() {
                   `}
                 >
                   <span className="text-xl">{item.icon}</span>
-                  <span className="ml-3 font-medium">{item.label}</span>
+                  <span className={`ml-3 ${item.isChild ? 'text-sm font-normal' : 'font-medium'}`}>{item.label}</span>
                 </Link>
               </li>
             ))}

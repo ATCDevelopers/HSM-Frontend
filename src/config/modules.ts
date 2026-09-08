@@ -38,6 +38,19 @@ export const modules: Module[] = [
     description: 'Manage system users and staff',
     permissions: ['users.read', 'users.manage'],
     roles: ['SYS_ADMIN'],
+    children: [
+      { id: 'users-index', name: 'Users', icon: 'Users', path: '/users' },
+      { id: 'users-register', name: 'Register User', icon: 'User', path: '/users/register' },
+      { id: 'users-nurse', name: 'Nurse Portal', icon: 'User', path: '/users/nurse' },
+      { id: 'users-pharmacy', name: 'Pharmacy Portal', icon: 'Pill', path: '/users/pharmacy' },
+      { id: 'users-lab', name: 'Lab Portal', icon: 'Flask', path: '/users/lab' },
+      { id: 'users-admin', name: 'Admin Portal', icon: 'Shield', path: '/users/admin' },
+      { id: 'users-accountant', name: 'Accountant Portal', icon: 'DollarSign', path: '/users/accountant' },
+      { id: 'users-clinic-manager', name: 'Clinic Manager Portal', icon: 'Building', path: '/users/clinic-manager' },
+      { id: 'users-reception', name: 'Reception Portal', icon: 'Home', path: '/users/reception' },
+      { id: 'users-profile', name: 'Profile', icon: 'User', path: '/users/profile' },
+      { id: 'users-notes', name: 'Notes', icon: 'FileText', path: '/users/notes' },
+    ],
   },
 
   // Patient Management
