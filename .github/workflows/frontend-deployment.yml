@@ -36,5 +36,5 @@ jobs:
           key: ${{ secrets.FRONTEND_DEPLOYMENT_PRIVATE_KEY }} # Your SSH private key
           port: 22
           source: "dist/*"                                   # Vite's output folder
-          target: "/var/www/hospital-management-system"                    # Make sure this matches your Nginx root path!
+          target: "/var/www/hospital-management-system/HSM-Frontend"                    # Make sure this matches your Nginx root path!
           strip_components: 1
