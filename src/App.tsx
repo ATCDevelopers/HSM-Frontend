@@ -3,6 +3,7 @@ import AppRoutes from "./routes/AppRoutes";
 import { AuthProvider } from "./auth/AuthProvider";
 import { ReferenceDataProvider } from "./contexts/ReferenceDataContext";
 import Toaster from "./components/atoms/ui/Toaster";
+import { SidebarProvider } from "./contexts/SidebarContext";
 
 /**
  * Provider order matters:
@@ -17,7 +18,9 @@ function App() {
       <BrowserRouter>
         <AuthProvider>
           <ReferenceDataProvider>
-            <AppRoutes />
+            <SidebarProvider>
+              <AppRoutes />
+            </SidebarProvider>
           </ReferenceDataProvider>
         </AuthProvider>
       </BrowserRouter>

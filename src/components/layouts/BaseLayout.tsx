@@ -28,7 +28,7 @@ function BaseLayout({
                         navLinks = [],
                     }) {
     return (
-        <div className="bg-gray-100 min-h-screen flex flex-col">
+        <div className="bg-gray-100 w-full min-h-screen flex flex-col">
             {/* Header Section */}
             <Header
                 resourceName={resourceName}
@@ -38,19 +38,19 @@ function BaseLayout({
             />
 
             {/* Main Layout Container */}
-            <div className="flex flex-1 pt-16">
+            <div className="flex flex-1 pt-16 w-full">
                 {/* Sidebar Navigation */}
                 <Sidebar/>
 
                 {/* Content Layout Wrapper */}
-                <div className="flex-1 flex ml-64 mt-36 flex-col pr-4">
+                <div className="flex-1 flex ml-0 md:ml-64 flex-col pr-4 w-full">
                     {/* Main Content Area */}
                     <main
-                        className="flex-1 overflow-x-hidden overflow-y-auto pr-4"
+                        className="flex-1 overflow-x-hidden overflow-y-auto pr-4 w-full"
                         role="main">
-                        {/* Page Content Container */}
+                        {/* Page Content Container - full width, aligned to top */}
                         <div
-                            className="container mx-auto px-4 max-w-full">{children}</div>
+                            className="w-full flex flex-col items-center px-4">{children}</div>
                     </main>
                 </div>
             </div>
