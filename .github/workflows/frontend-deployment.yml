@@ -10,31 +10,30 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Get the code from GitHub
+     
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # Step 2: Set up Node.js on GitHub's server
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
 
-      # Step 3: Install dependencies and compile Vite production files
+     
       - name: Install & Build Frontend
         run: |
           npm ci
           npm run build
 
-      # Step 4: Securely copy ONLY the compiled production files (dist) to your VPS
+    
       - name: Copy Compiled Files to VPS
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ secrets.FRONTEND_DEPLOYMENT }}          # Your VPS IP address
-          username: ${{ secrets.FRONTEND_DEPLOYMENT_USERNAME }} # Your SSH username
-          key: ${{ secrets.FRONTEND_DEPLOYMENT_PRIVATE_KEY }} # Your SSH private key
+          host: ${{ secrets.FRONTEND_DEPLOYMENT }}          
+          username: ${{ secrets.FRONTEND_DEPLOYMENT_USERNAME }} 
+          key: ${{ secrets.FRONTEND_DEPLOYMENT_PRIVATE_KEY }} 
           port: 22
-          source: "dist/*"                                   # Vite's output folder
-          target: "/var/www/hospital-management-system/HSM-Frontend"                    # Make sure this matches your Nginx root path!
+          source: "dist/*"                                  
+          target: "/var/www/hospital-management-system/HSM-Frontend"                  
           strip_components: 1
