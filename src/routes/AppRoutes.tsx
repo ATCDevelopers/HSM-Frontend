@@ -153,15 +153,16 @@ function AppRoutes() {
 
           {/* Users */}
           <Route path="/users" element={<UsersIndex />} />
+          <Route path="/users/index" element={<UsersIndex />} />
           <Route path="/users/dashboard" element={<UsersDashboard />} />
           <Route path="/users/register" element={<RegisterUser />} />
-          <Route path="/users/nurse" element={<BaseLayout resourceName="Nurse Portal"><NursePortal /></BaseLayout>} />
-          <Route path="/users/pharmacy" element={<BaseLayout resourceName="Pharmacy Portal"><PharmacyPortal /></BaseLayout>} />
-          <Route path="/users/lab" element={<BaseLayout resourceName="Lab Portal"><LabPortal /></BaseLayout>} />
-          <Route path="/users/admin" element={<BaseLayout resourceName="Admin Portal"><AdminPortal /></BaseLayout>} />
-          <Route path="/users/accountant" element={<BaseLayout resourceName="Accountant Portal"><AccountantPortal /></BaseLayout>} />
-          <Route path="/users/clinic-manager" element={<BaseLayout resourceName="Clinic Manager Portal"><ClinicManagerPortal /></BaseLayout>} />
-          <Route path="/users/reception" element={<BaseLayout resourceName="Reception Portal"><ReceptionPortal /></BaseLayout>} />
+          <Route path="/users/nurse-portal" element={<BaseLayout resourceName="Nurse Portal"><NursePortal /></BaseLayout>} />
+          <Route path="/users/pharmacy-portal" element={<BaseLayout resourceName="Pharmacy Portal"><PharmacyPortal /></BaseLayout>} />
+          <Route path="/users/lab-portal" element={<BaseLayout resourceName="Lab Portal"><LabPortal /></BaseLayout>} />
+          <Route path="/users/admin-portal" element={<BaseLayout resourceName="Admin Portal"><AdminPortal /></BaseLayout>} />
+          <Route path="/users/accountant-portal" element={<BaseLayout resourceName="Accountant Portal"><AccountantPortal /></BaseLayout>} />
+          <Route path="/users/clinic-manager-portal" element={<BaseLayout resourceName="Clinic Manager Portal"><ClinicManagerPortal /></BaseLayout>} />
+          <Route path="/users/reception-portal" element={<BaseLayout resourceName="Reception Portal"><ReceptionPortal /></BaseLayout>} />
           <Route path="/users/profile" element={<BaseLayout resourceName="Profile"><Profile /></BaseLayout>} />
           <Route path="/users/notes" element={<BaseLayout resourceName="User Notes"><Notes /></BaseLayout>} />
         </Route>

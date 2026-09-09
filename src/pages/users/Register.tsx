@@ -16,6 +16,7 @@ export default function RegisterUser() {
       setError("Please fill in required fields.");
       return;
     }
+    
     const users = readUsers();
     const newUser: User = {
       id: generateUserId(users),
@@ -31,15 +32,15 @@ export default function RegisterUser() {
 
   return (
     <BaseLayout resourceName="Register User">
-      <div className="rounded-2xl bg-blue-50 p-6">
-        <div className="mx-auto max-w-4xl">
+      <div className="w-full rounded-2xl bg-blue-50 p-6">
+        <div className="mx-auto max-w-4xl w-full px-4">
           <button onClick={() => navigate('/users')} className="mb-4 text-sm font-semibold text-blue-600">← Back to Users</button>
-          <div className="rounded-2xl bg-white p-8 shadow-sm">
+          <div className="rounded-2xl bg-white p-8 shadow-sm w-full">
             <h1 className="text-lg font-bold text-gray-900">Register New User</h1>
             <p className="mt-0.5 mb-6 text-sm text-gray-500">Create account and assign a role.</p>
             {error && <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-600">{error}</div>}
 
-            <form className="grid grid-cols-1 gap-5 md:grid-cols-2" onSubmit={handleSubmit}>
+            <form className="grid grid-cols-1 gap-5 md:grid-cols-2 w-full" onSubmit={handleSubmit}>
               <Input label="First name" value={form.firstName || ''} onChange={(e) => setForm({ ...form, firstName: e.target.value })} required />
               <Input label="Last name" value={form.lastName || ''} onChange={(e) => setForm({ ...form, lastName: e.target.value })} required />
               <Input label="Email" type="email" value={form.email || ''} onChange={(e) => setForm({ ...form, email: e.target.value })} required />
@@ -58,8 +59,9 @@ export default function RegisterUser() {
               </label>
 
               <div className="md:col-span-2 flex justify-end gap-3 border-t border-gray-200 pt-5">
-                <Button variant="outline" onClick={() => navigate('/users')}>Cancel</Button>
-                <Button type="submit">Register User</Button>
+                <Button variant="outline" onClick={handleSubmit} type="button">
+                  Submit
+                </Button>
               </div>
             </form>
           </div>

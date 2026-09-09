@@ -31,25 +31,25 @@ export default function Notes() {
 
   return (
     <BaseLayout resourceName="User Notes">
-      <div className="rounded-2xl bg-blue-50 p-6">
-        <div className="mx-auto max-w-4xl">
-          <div className="rounded-2xl bg-white p-6 shadow-sm">
+      <div className="w-full rounded-2xl bg-blue-50 p-6">
+        <div className="mx-auto max-w-4xl w-full px-4">
+          <div className="rounded-2xl bg-white p-6 shadow-sm w-full">
             <h1 className="text-lg font-bold text-gray-900">Notes</h1>
             <p className="mt-0.5 mb-4 text-sm text-gray-500">Create and view user-specific notes and audit comments.</p>
 
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-3 mb-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3 mb-4 w-full">
               <label className="text-sm font-medium text-gray-700 md:col-span-2">User
                 <select value={userId} onChange={(e) => setUserId(e.target.value)} className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20">
                   {users.map(u => <option key={u.id} value={u.id}>{u.firstName} {u.lastName} — {u.role}</option>)}
                 </select>
               </label>
-              <div className="md:col-span-3">
+              <div className="md:col-span-3 w-full">
                 <Input label="New note" value={text} onChange={(e) => setText(e.target.value)} placeholder="Write a note for selected user..." />
                 <div className="flex justify-end mt-3"><Button onClick={addNote}>Add note</Button></div>
               </div>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-3 w-full">
               {notes.length ? notes.map(n => (
                 <div key={n.id} className="rounded-lg border border-gray-100 p-3">
                   <div className="flex items-start justify-between">

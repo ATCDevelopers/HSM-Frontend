@@ -53,20 +53,20 @@ export default function UsersIndex() {
 
   return (
     <BaseLayout resourceName="Users">
-      <div className="rounded-2xl bg-blue-50 p-6">
-        <div className="mx-auto max-w-6xl">
-          <div className="flex items-center justify-between gap-4 mb-4">
+      <div className="w-full rounded-2xl bg-blue-50 p-6">
+        <div className="mx-auto max-w-6xl w-full">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-4">
             <div>
               <h2 className="text-lg font-bold text-gray-900">Users</h2>
               <p className="mt-0.5 text-sm text-gray-500">Manage system users, roles and portals.</p>
             </div>
-            <div className="flex items-center gap-3">
-              <Input type="search" placeholder="Search users by name, id, email or role" value={search} onChange={(e) => setSearch(e.target.value)} />
+            <div className="flex flex-col md:flex-row items-start md:items-center gap-3 w-full md:w-auto">
+              <Input label="" type="search" placeholder="Search users by name, id, email or role" value={search} onChange={(e) => setSearch(e.target.value)} />
               <Button onClick={() => window.location.assign('/users/register')}>Add user</Button>
             </div>
           </div>
 
-          <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
+          <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white w-full">
             <table className="w-full text-sm">
               <thead className="bg-gray-50 text-left">
                 <tr>
@@ -81,7 +81,7 @@ export default function UsersIndex() {
                     <td className="px-4 py-3 text-gray-700">{u.email}</td>
                     <td className="px-4 py-3 text-gray-700">{u.role}</td>
                     <td className="px-4 py-3"><span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${u.status === 'ACTIVE' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{u.status}</span></td>
-                    <td className="px-4 py-3"><Dropdown showChevron={false} trigger={<EllipsisVerticalIcon className="h-5 w-5" />} triggerAriaLabel="User actions" items={[{label:'View', onClick:() => openView(u)}, {label:'Edit', onClick:() => openEdit(u)}, {label:'Delete', onClick:() => handleDelete(u), className:'text-red-600 hover:bg-red-50'}]} position="bottom-right" /></td>
+                    <td className="px-4 py-3"><Dropdown children={null} showChevron={false} trigger={<EllipsisVerticalIcon className="h-5 w-5" />} triggerAriaLabel="User actions" items={[{label:'View', onClick:() => openView(u)}, {label:'Edit', onClick:() => openEdit(u)}, {label:'Delete', onClick:() => handleDelete(u), className:'text-red-600 hover:bg-red-50'}]} position="bottom-right" /></td>
                   </tr>
                 )) : <tr><td colSpan={6} className="px-4 py-8 text-center text-sm text-gray-400">No users found.</td></tr>}
               </tbody>
@@ -97,10 +97,10 @@ export default function UsersIndex() {
             <p className="text-sm text-gray-600">Email: <span className="font-medium text-gray-900">{selected.email}</span></p>
             <p className="text-sm text-gray-600 mt-2">Role: <span className="font-medium text-gray-900">{selected.role}</span></p>
             <p className="text-sm text-gray-600 mt-2">Status: <span className="font-medium text-gray-900">{selected.status}</span></p>
-            <div className="flex justify-end gap-3 mt-6">
-              <Button variant="secondary" onClick={() => setViewOpen(false)}>Close</Button>
-              <Button onClick={() => { setViewOpen(false); openEdit(selected); }}>Edit</Button>
-            </div>
+              <div className="flex justify-end gap-3 mt-6">
+                <Button variant="secondary" onClick={() => setViewOpen(false)}>Close</Button>
+                <Button onClick={() => { setViewOpen(false); openEdit(selected); }}>Edit</Button>
+              </div>
           </div>
         )}
       </Modal>
@@ -133,7 +133,7 @@ function EditUserForm({ user, onCancel, onSave }: { user: User; onCancel: () => 
       </label>
       <div className="md:col-span-2 flex justify-end gap-3 mt-3">
         <Button variant="secondary" onClick={onCancel}>Cancel</Button>
-        <Button type="submit">Save</Button>
+        <Button type="submit" onClick={() => {}}>Save</Button>
       </div>
     </form>
   );

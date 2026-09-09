@@ -1,0 +1,63 @@
+
+> react-starter-template@1.0.0 type-check
+> tsc --noEmit
+
+src/components/atoms/ui/Action.tsx(159,18): error TS2739: Type '{ trigger: string; items: { label: Element; onClick: () => any; disabled: any; className: any; }[]; position: string; triggerClassName: any; }' is missing the following properties from type '{ children: any; className?: string; dropdownClassName?: string; items: any; position?: string; showChevron?: boolean; trigger: any; triggerAriaLabel: any; triggerClassName?: string; }': children, triggerAriaLabel
+src/components/atoms/ui/Button.tsx(96,13): error TS2322: Type 'string' is not assignable to type '"button" | "reset" | "submit"'.
+src/config/projectConfig.ts(39,31): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/config/projectConfig.ts(40,31): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/config/projectConfig.ts(41,32): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/config/projectConfig.ts(46,28): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/config/projectConfig.ts(47,31): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/config/projectConfig.ts(48,35): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/config/projectConfig.ts(53,29): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/config/projectConfig.ts(54,32): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/config/projectConfig.ts(59,39): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/config/projectConfig.ts(64,27): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/config/projectConfig.ts(65,36): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/config/projectConfig.ts(66,40): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/config/projectConfig.ts(71,44): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/contexts/ReferenceDataContext.tsx(11,5): error TS2411: Property 'loading' of type 'boolean' is not assignable to 'string' index type 'unknown[]'.
+src/contexts/ReferenceDataContext.tsx(12,5): error TS2411: Property 'error' of type 'string' is not assignable to 'string' index type 'unknown[]'.
+src/contexts/ReferenceDataContext.tsx(89,11): error TS2322: Type '{ loading: boolean; error: string; }' is not assignable to type 'ReferenceDataContextValue'.
+  Property 'loading' is incompatible with index signature.
+    Type 'boolean' is not assignable to type 'unknown[]'.
+src/main.tsx(3,8): error TS2882: Cannot find module or type declarations for side-effect import of './index.css'.
+src/pages/auth/Login.tsx(65,35): error TS2339: Property 'email' does not exist on type '{}'.
+src/pages/auth/Login.tsx(75,35): error TS2339: Property 'password' does not exist on type '{}'.
+src/pages/auth/Login.tsx(80,18): error TS2741: Property 'onClick' is missing in type '{ type: string; loading: boolean; className: string; children: string; }' but required in type '{ [x: string]: any; children: any; className?: string; disabled?: boolean; loading?: boolean; onClick: any; size?: string; type?: string; variant?: string; }'.
+src/pages/auth/Register.tsx(75,39): error TS2339: Property 'firstName' does not exist on type '{}'.
+src/pages/auth/Register.tsx(82,39): error TS2339: Property 'lastName' does not exist on type '{}'.
+src/pages/auth/Register.tsx(91,35): error TS2339: Property 'username' does not exist on type '{}'.
+src/pages/auth/Register.tsx(100,35): error TS2339: Property 'email' does not exist on type '{}'.
+src/pages/auth/Register.tsx(109,35): error TS2339: Property 'phoneNumber' does not exist on type '{}'.
+src/pages/auth/Register.tsx(117,35): error TS2339: Property 'password' does not exist on type '{}'.
+src/pages/auth/Register.tsx(129,18): error TS2741: Property 'onClick' is missing in type '{ type: string; loading: boolean; className: string; children: string; }' but required in type '{ [x: string]: any; children: any; className?: string; disabled?: boolean; loading?: boolean; onClick: any; size?: string; type?: string; variant?: string; }'.
+src/pages/medical-records/Index.tsx(12,160): error TS2353: Object literal may only specify known properties, and 'status' does not exist in type 'PatientListRow'.
+src/pages/medical-records/Index.tsx(13,164): error TS2353: Object literal may only specify known properties, and 'status' does not exist in type 'PatientListRow'.
+src/pages/medical-records/Index.tsx(14,160): error TS2353: Object literal may only specify known properties, and 'status' does not exist in type 'PatientListRow'.
+src/pages/medical-records/Index.tsx(15,161): error TS2353: Object literal may only specify known properties, and 'status' does not exist in type 'PatientListRow'.
+src/pages/medical-records/Index.tsx(16,161): error TS2353: Object literal may only specify known properties, and 'status' does not exist in type 'PatientListRow'.
+src/pages/medical-records/Index.tsx(17,160): error TS2353: Object literal may only specify known properties, and 'status' does not exist in type 'PatientListRow'.
+src/pages/medical-records/Index.tsx(18,167): error TS2353: Object literal may only specify known properties, and 'status' does not exist in type 'PatientListRow'.
+src/pages/medical-records/Index.tsx(19,162): error TS2353: Object literal may only specify known properties, and 'status' does not exist in type 'PatientListRow'.
+src/pages/medical-records/Index.tsx(20,163): error TS2353: Object literal may only specify known properties, and 'status' does not exist in type 'PatientListRow'.
+src/pages/medical-records/Index.tsx(21,163): error TS2353: Object literal may only specify known properties, and 'status' does not exist in type 'PatientListRow'.
+src/pages/medical-records/Index.tsx(22,171): error TS2353: Object literal may only specify known properties, and 'status' does not exist in type 'PatientListRow'.
+src/pages/medical-records/Index.tsx(23,159): error TS2353: Object literal may only specify known properties, and 'status' does not exist in type 'PatientListRow'.
+src/pages/medical-records/Index.tsx(24,167): error TS2353: Object literal may only specify known properties, and 'status' does not exist in type 'PatientListRow'.
+src/pages/medical-records/Index.tsx(25,170): error TS2353: Object literal may only specify known properties, and 'status' does not exist in type 'PatientListRow'.
+src/pages/medical-records/Index.tsx(26,173): error TS2353: Object literal may only specify known properties, and 'status' does not exist in type 'PatientListRow'.
+src/pages/medical-records/Index.tsx(27,163): error TS2353: Object literal may only specify known properties, and 'status' does not exist in type 'PatientListRow'.
+src/pages/medical-records/Index.tsx(28,174): error TS2353: Object literal may only specify known properties, and 'status' does not exist in type 'PatientListRow'.
+src/pages/medical-records/Index.tsx(29,169): error TS2353: Object literal may only specify known properties, and 'status' does not exist in type 'PatientListRow'.
+src/pages/medical-records/Index.tsx(58,15): error TS2339: Property 'status' does not exist on type 'PatientListRow'.
+src/pages/medical-records/Index.tsx(58,28): error TS2339: Property 'status' does not exist on type 'PatientListRow'.
+src/pages/medical-records/Index.tsx(59,18): error TS2339: Property 'status' does not exist on type 'PatientListRow'.
+src/pages/medical-records/Index.tsx(141,29): error TS2339: Property 'status' does not exist on type 'PatientListRow'.
+src/pages/medical-records/Index.tsx(164,33): error TS2339: Property 'status' does not exist on type 'PatientListRow'.
+src/pages/medical-records/Index.tsx(171,35): error TS2339: Property 'status' does not exist on type 'PatientListRow'.
+src/pages/medical-records/Index.tsx(174,32): error TS2339: Property 'status' does not exist on type 'PatientListRow'.
+src/pages/patients/PatientsManagement.tsx(47,1136): error TS2741: Property 'children' is missing in type '{ items: ({ label: string; onClick: () => void | Promise<void>; className?: undefined; } | { label: string; onClick: () => void; className: string; })[]; trigger: Element; showChevron: false; triggerAriaLabel: string; position: string; triggerClassName: string; }' but required in type '{ children: any; className?: string; dropdownClassName?: string; items: any; position?: string; showChevron?: boolean; trigger: any; triggerAriaLabel: any; triggerClassName?: string; }'.
+src/services/apiResponse.ts(94,5): error TS2322: Type 'ApiResponse<T>' is not assignable to type 'T'.
+  'T' could be instantiated with an arbitrary type which could be unrelated to 'ApiResponse<T>'.
