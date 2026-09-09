@@ -1,0 +1,26 @@
+name: Deploy Hospital Management System  Frontend
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: SSH into Server and Update App
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.FRONTEND_DEPLOYMENT }}
+          username: ${{ secrets.FRONTEND_DEPLOYMENT_USERNAME }}
+          key: ${{ secrets.FRONTEND_DEPLOYMENT_PRIVATE_KEY }}
+          port: 22
+          script: |
+            cd /var/www/hospital-management-system/HSM-Frontend
+            git fetch origin develop
+            git reset --hard origin/develop
+            git pull origin develop
+            npm install
+            pm2 restart hospital-api
