@@ -1,4 +1,4 @@
-name: Deploy Hospital Management System  Frontend
+name: Deploy Hospital Management System Frontend
 
 on:
   push:
@@ -6,21 +6,35 @@ on:
       - develop
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: SSH into Server and Update App
-        uses: appleboy/ssh-action@v1
+      # Step 1: Get the code from GitHub
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # Step 2: Set up Node.js on GitHub's server
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
-          host: ${{ secrets.FRONTEND_DEPLOYMENT }}
-          username: ${{ secrets.FRONTEND_DEPLOYMENT_USERNAME }}
-          key: ${{ secrets.FRONTEND_DEPLOYMENT_PRIVATE_KEY }}
+          node-version: '20'
+          cache: 'npm'
+
+      # Step 3: Install dependencies and compile Vite production files
+      - name: Install & Build Frontend
+        run: |
+          npm ci
+          npm run build
+
+      # Step 4: Securely copy ONLY the compiled production files (dist) to your VPS
+      - name: Copy Compiled Files to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.FRONTEND_DEPLOYMENT }}          # Your VPS IP address
+          username: ${{ secrets.FRONTEND_DEPLOYMENT_USERNAME }} # Your SSH username
+          key: ${{ secrets.FRONTEND_DEPLOYMENT_PRIVATE_KEY }} # Your SSH private key
           port: 22
-          script: |
-            cd /var/www/hospital-management-system/HSM-Frontend
-            git fetch origin develop
-            git reset --hard origin/develop
-            git pull origin develop
-            npm install
-            pm2 restart hospital-api
+          source: "dist/*"                                   # Vite's output folder
+          target: "/var/www/hospital-management-system"                    # Make sure this matches your Nginx root path!
+          strip_components: 1
