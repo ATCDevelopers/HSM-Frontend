@@ -13,17 +13,17 @@ export default function LabPortal() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full">
             <Card padding="p-4" className="text-center">
               <div className="text-sm text-gray-500">Pending tests</div>
-              <div className="text-xl font-bold mt-2">14</div>
+              <div className="text-xl font-bold mt-2">N/A</div>
               <div className="mt-3 flex justify-center"><Button onClick={() => {}}>Start analysis</Button></div>
             </Card>
             <Card padding="p-4" className="text-center">
               <div className="text-sm text-gray-500">Samples awaiting pickup</div>
-              <div className="text-xl font-bold mt-2 text-yellow-600">6</div>
+              <div className="text-xl font-bold mt-2 text-yellow-600">N/A</div>
               <div className="mt-3 flex justify-center"><Button variant="outline" onClick={() => {}}>Manage samples</Button></div>
             </Card>
             <Card padding="p-4" className="text-center">
               <div className="text-sm text-gray-500">Results ready</div>
-              <div className="text-xl font-bold mt-2">9</div>
+              <div className="text-xl font-bold mt-2">N/A</div>
               <div className="mt-3 flex justify-center"><Button variant="ghost" onClick={() => {}}>Publish</Button></div>
             </Card>
           </div>

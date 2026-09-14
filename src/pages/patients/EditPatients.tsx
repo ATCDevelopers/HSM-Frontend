@@ -1,7 +1,8 @@
 import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import BaseLayout from "../../components/layouts/BaseLayout";
-import { Patient, readPatients, writePatients } from "./patientStorage";
+import BaseLayout from "../../components/layouts/BaseLayout.tsx";
+import { patientAPI, type Patient } from "../../services/patientAPI";
+import Swal from "sweetalert2";
 
 const inputFields = [
   ["firstName", "First name", "text"], ["middleName", "Middle name", "text"], ["lastName", "Last name", "text"],
@@ -14,29 +15,43 @@ export default function EditPatients() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [formData, setFormData] = useState<Patient | null>(null);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    setFormData(readPatients().find((patient) => patient.id === id) || null);
+    if (id) patientAPI.get(id).then(setFormData).catch((requestError: unknown) => setError(requestError instanceof Error ? requestError.message : "Patient not found"));
   }, [id]);
 
   const handleChange = (event: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     if (formData) setFormData({ ...formData, [event.target.name]: event.target.value });
   };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!formData) return;
-    writePatients(readPatients().map((patient) => patient.id === formData.id ? formData : patient));
-    navigate(`/patients/${formData.id}`);
+    try {
+      await patientAPI.update(formData.id, formData);
+      await Swal.fire({
+        title: "Patient Updated!",
+        text: "Patient details updated successfully.",
+        icon: "success",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+      navigate(`/patients/${formData.id}`);
+    } catch (requestError: unknown) {
+      const msg = requestError instanceof Error ? requestError.message : "Patient update failed";
+      setError(msg);
+      Swal.fire("Update Failed", msg, "error");
+    }
   };
 
-  if (!formData) return <BaseLayout resourceName="Edit Patient"><div className="rounded-2xl bg-blue-50 p-6 text-sm">Patient record not found.</div></BaseLayout>;
+  if (!formData) return <BaseLayout resourceName="Edit Patient"><div className="rounded-2xl bg-blue-50 p-6 text-sm">{error || "Loading patient record..."}</div></BaseLayout>;
 
   return (
     <BaseLayout resourceName="Edit Patient">
-      <div className="rounded-2xl bg-blue-50 p-6"><div className="mx-auto max-w-4xl">
+      <div className="w-full rounded-2xl bg-blue-50 p-6"><div className="mx-auto w-full max-w-6xl">
         <button onClick={() => navigate(`/patients/${formData.id}`)} className="mb-4 text-sm font-semibold text-blue-600 hover:text-blue-700">← Back to Patient Details</button>
-        <div className="rounded-2xl bg-white p-8 shadow-sm"><h1 className="text-lg font-bold text-gray-900">Edit Patient</h1><p className="mt-0.5 mb-6 text-sm text-gray-500">Update the registered patient information.</p>
+        <div className="w-full rounded-2xl bg-white p-8 shadow-sm">{error && <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</div>}<h1 className="text-lg font-bold text-gray-900">Edit Patient</h1><p className="mt-0.5 mb-6 text-sm text-gray-500">Update the registered patient information.</p>
           <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-5 md:grid-cols-2">
             {inputFields.map(([name, label, type]) => <label key={name} className="text-sm font-medium text-gray-700">{label}<input required={["firstName", "lastName", "phone"].includes(name)} type={type} name={name} value={formData[name as keyof Patient] as string} onChange={handleChange} className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm font-normal outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20" /></label>)}
             <label className="text-sm font-medium text-gray-700">Gender<select required name="gender" value={formData.gender} onChange={handleChange} className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm font-normal outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"><option value="">Select gender</option><option>Male</option><option>Female</option><option>Other</option></select></label>

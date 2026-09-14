@@ -1,7 +1,8 @@
 import { ChangeEvent, FormEvent, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import BaseLayout from "../../components/layouts/BaseLayout";
-import { Patient, readPatients, writePatients } from "./patientStorage";
+import BaseLayout from "../../components/layouts/BaseLayout.tsx";
+import { patientAPI } from "../../services/patientAPI";
+import Swal from "sweetalert2";
 
 const inputFields = [
   ["firstName", "First name", "text"],
@@ -35,30 +36,38 @@ export default function RegisterPatient() {
     reader.readAsDataURL(file);
   };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!formData.firstName || !formData.lastName || !formData.gender || !formData.dateOfBirth || !formData.phone) {
       setError("Please fill in all required fields.");
+      Swal.fire("Missing Information", "Please fill in all required fields.", "warning");
       return;
     }
-    const patients = readPatients();
-    const newPatient: Patient = {
-      ...formData,
-      id: `P-${String(patients.length + 1).padStart(3, "0")}`,
-      status: "ACTIVE",
-    };
-    writePatients([...patients, newPatient]);
-    navigate("/patients");
+    try {
+      await patientAPI.create(formData);
+      await Swal.fire({
+        title: "Patient Registered!",
+        text: `${formData.firstName} ${formData.lastName} has been registered successfully.`,
+        icon: "success",
+        timer: 2000,
+        showConfirmButton: false,
+      });
+      navigate("/patients");
+    } catch (requestError: unknown) {
+      const msg = requestError instanceof Error ? requestError.message : "Patient registration failed";
+      setError(msg);
+      Swal.fire("Registration Failed", msg, "error");
+    }
   };
 
   return (
     <BaseLayout resourceName="Register Patient">
-      <div className="rounded-2xl bg-blue-50 p-6">
-        <div className="mx-auto max-w-4xl">
+      <div className="w-full rounded-2xl bg-blue-50 p-6">
+        <div className="mx-auto w-full max-w-6xl">
           <button onClick={() => navigate("/patients")} className="mb-4 text-sm font-semibold text-blue-600 hover:text-blue-700">
             ← Back to Patient Management
           </button>
-          <div className="rounded-2xl bg-white p-8 shadow-sm">
+          <div className="w-full rounded-2xl bg-white p-8 shadow-sm">
             <h1 className="text-lg font-bold text-gray-900">Register New Patient</h1>
             <p className="mt-0.5 mb-6 text-sm text-gray-500">Complete the form below to register a new patient.</p>
             {error && <div className="mb-5 rounded-lg bg-red-50 p-3 text-sm text-red-600">{error}</div>}

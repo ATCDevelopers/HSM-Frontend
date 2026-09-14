@@ -42,10 +42,10 @@ import {UserCircleIcon} from "@heroicons/react/24/outline";
  * <AuthUser />
  */
 function AuthUser({user, className = ""}) {
-    // Default user data ensures component always renders with sensible defaults
+    // Keep the unauthenticated state neutral; identity must come from auth state.
     const userData = user || {
-        name: "John Doe",
-        role: "Administrator",
+        name: "Not signed in",
+        role: "",
         avatar: null,
     };
 

@@ -2,28 +2,36 @@ import React, { useState } from 'react';
 import { CalendarDaysIcon, ClockIcon, StarIcon, UserCircleIcon } from '@heroicons/react/24/outline';
 import { useNavigate } from 'react-router-dom';
 import BaseLayout from '../../components/layouts/BaseLayout';
+import Swal from 'sweetalert2';
 
 export const NewBookingPage: React.FC = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     patientName: '',
-    doctorId: 'Dr. Sarah Smith',
+    doctorId: '',
     date: '',
     timeSlot: '',
     reason: '',
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Submitting Booking:', formData);
+    await Swal.fire({
+      title: 'Booking Confirmed!',
+      text: `Appointment for ${formData.patientName} has been booked.`,
+      icon: 'success',
+      timer: 2000,
+      showConfirmButton: false,
+    });
+    navigate('/appointments');
   };
 
-  const quickSlots = ['09:00 AM', '10:30 AM', '12:00 PM', '02:30 PM', '04:00 PM'];
+  const quickSlots: string[] = [];
 
   return (
     <BaseLayout resourceName="Appointments">
-      <div className="rounded-3xl bg-linear-to-br from-sky-50 via-white to-indigo-50 p-6 shadow-sm ring-1 ring-sky-100">
-        <div className="mx-auto max-w-6xl">
+      <div className="w-full rounded-3xl bg-linear-to-br from-sky-50 via-white to-indigo-50 p-6 shadow-sm ring-1 ring-sky-100">
+        <div className="mx-auto w-full">
           <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <p className="text-sm font-medium uppercase tracking-[0.2em] text-blue-600">Booking</p>
@@ -53,7 +61,7 @@ export const NewBookingPage: React.FC = () => {
                     <UserCircleIcon className="h-8 w-8 text-cyan-200" />
                     <div>
                       <p className="text-sm text-blue-100">Available doctor</p>
-                      <p className="font-semibold">Dr. Sarah Smith</p>
+                      <p className="font-semibold">Select from available doctors</p>
                     </div>
                   </div>
                 </div>
@@ -63,7 +71,7 @@ export const NewBookingPage: React.FC = () => {
                     <ClockIcon className="h-8 w-8 text-cyan-200" />
                     <div>
                       <p className="text-sm text-blue-100">Average wait</p>
-                      <p className="font-semibold">15 - 20 minutes</p>
+                      <p className="font-semibold">Available from API</p>
                     </div>
                   </div>
                 </div>
@@ -73,7 +81,7 @@ export const NewBookingPage: React.FC = () => {
                     <StarIcon className="h-8 w-8 text-cyan-200" />
                     <div>
                       <p className="text-sm text-blue-100">Patient rating</p>
-                      <p className="font-semibold">4.9 / 5 care score</p>
+                      <p className="font-semibold">Available from API</p>
                     </div>
                   </div>
                 </div>
@@ -102,10 +110,7 @@ export const NewBookingPage: React.FC = () => {
                       value={formData.doctorId}
                       onChange={(e) => setFormData({ ...formData, doctorId: e.target.value })}
                     >
-                      <option>Dr. Sarah Smith</option>
-                      <option>Dr. Daniel Lee</option>
-                      <option>Dr. Emily Brown</option>
-                      <option>Dr. James Wilson</option>
+                      <option value="">Doctor data unavailable</option>
                     </select>
                   </div>
 
@@ -124,7 +129,7 @@ export const NewBookingPage: React.FC = () => {
                 <div>
                   <label className="block text-sm font-medium text-slate-700">Time slot</label>
                   <div className="mt-2 flex flex-wrap gap-2">
-                    {quickSlots.map((slot) => (
+                    {quickSlots.length ? quickSlots.map((slot) => (
                       <button
                         key={slot}
                         type="button"
@@ -133,7 +138,7 @@ export const NewBookingPage: React.FC = () => {
                       >
                         {slot}
                       </button>
-                    ))}
+                    )) : <p className="text-sm text-slate-400">Time slots will load after doctor availability is connected.</p>}
                   </div>
                 </div>
 

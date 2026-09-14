@@ -45,6 +45,7 @@ export interface PatientListRow {
   bp: string;
   lab_test_count: number;
   prescription_count: number;
+  status: string;
 }
 
 export interface PatientHeader {

@@ -47,6 +47,17 @@ import React from "react";
  *   Edit
  * </Button>
  */
+interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  children?: React.ReactNode;
+  onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
+  type?: "button" | "submit" | "reset";
+  variant?: "primary" | "secondary" | "danger" | "success" | "outline" | "ghost" | "link";
+  size?: "sm" | "md" | "lg";
+  disabled?: boolean;
+  loading?: boolean;
+  className?: string;
+}
+
 function Button({
                     children,
                     onClick,
@@ -57,7 +68,7 @@ function Button({
                     loading = false,
                     className = "",
                     ...props
-                }) {
+                }: ButtonProps) {
     // Base classes that apply to all buttons
     const baseClasses =
         "inline-flex items-center justify-center font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2";

@@ -7,11 +7,7 @@ export const PatientHistoryPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
 
-  const appointments = [
-    { id: 1, doctor: 'Dr. Sarah Smith', type: 'General Consultation', date: 'March 12, 2026', time: '10:30 AM', status: 'Completed' },
-    { id: 2, doctor: 'Dr. James Wilson', type: 'Follow-up', date: 'March 5, 2026', time: '2:00 PM', status: 'Completed' },
-    { id: 3, doctor: 'Dr. Emily Brown', type: 'Checkup', date: 'February 28, 2026', time: '11:15 AM', status: 'Completed' },
-  ];
+  const appointments: { id: number; doctor: string; type: string; date: string; time: string; status: string }[] = [];
 
   const filteredAppointments = appointments.filter((appointment) => {
     const query = searchTerm.toLowerCase();
@@ -31,8 +27,8 @@ export const PatientHistoryPage: React.FC = () => {
 
   return (
     <BaseLayout resourceName="Appointments">
-      <div className="rounded-3xl bg-linear-to-br from-indigo-50 via-white to-sky-50 p-6 shadow-sm ring-1 ring-indigo-100">
-        <div className="mx-auto max-w-6xl">
+      <div className="w-full rounded-3xl bg-linear-to-br from-indigo-50 via-white to-sky-50 p-6 shadow-sm ring-1 ring-indigo-100">
+        <div className="mx-auto w-full">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <p className="text-sm font-medium uppercase tracking-[0.2em] text-indigo-600">History</p>
@@ -84,7 +80,7 @@ export const PatientHistoryPage: React.FC = () => {
           </div>
 
           <div className="mt-6 space-y-3">
-            {filteredAppointments.map((appointment) => (
+            {filteredAppointments.length ? filteredAppointments.map((appointment) => (
               <button
                 key={appointment.id}
                 type="button"
@@ -102,7 +98,7 @@ export const PatientHistoryPage: React.FC = () => {
                   <ArrowRightIcon className="h-4 w-4 text-slate-400" />
                 </div>
               </button>
-            ))}
+            )) : <p className="rounded-2xl border border-dashed border-slate-300 p-8 text-center text-sm text-slate-400">No appointment data available.</p>}
           </div>
 
           <p className="mt-4 text-xs text-slate-400">Showing {filteredAppointments.length} appointments</p>

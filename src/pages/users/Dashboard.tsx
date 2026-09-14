@@ -1,15 +1,19 @@
+import { useEffect, useState } from "react";
 import BaseLayout from "../../components/layouts/BaseLayout";
 import Card from "../../components/atoms/ui/Card";
 import Button from "../../components/atoms/ui/Button";
-import { readUsers } from "./usersStorage";
+import { userAPI, type User } from "../../services/userAPI";
 import { useAuth } from "../../auth/AuthContext";
 
 export default function UsersDashboard() {
-  const users = readUsers();
+  const [users, setUsers] = useState<User[]>([]);
+  const [error, setError] = useState("");
+  useEffect(() => {
+    userAPI.list().then(setUsers).catch((requestError: unknown) => setError(requestError instanceof Error ? requestError.message : "Failed to load users"));
+  }, []);
   const total = users.length;
   const active = users.filter(u => u.status === 'ACTIVE').length;
   const inactive = users.filter(u => u.status === 'INACTIVE').length;
-  const newThisWeek = Math.max(0, Math.floor(total * 0.12));
 
   const { user } = useAuth();
 
@@ -19,6 +23,7 @@ export default function UsersDashboard() {
         <div className="w-full max-w-6xl mx-auto px-4">
           <h1 className="text-2xl font-bold mb-4 text-center">Users Dashboard</h1>
           <p className="text-sm text-gray-500 mb-6 text-center">Overview metrics, recent activity and quick actions for user management.</p>
+          {error && <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</div>}
 
           {/* 2x2 Grid for KPI cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 w-full" style={{ overflow: 'visible' }}>
@@ -36,7 +41,7 @@ export default function UsersDashboard() {
             </Card>
             <Card padding="p-4" className="text-center overflow-visible">
               <div className="text-sm text-gray-500">New this week</div>
-              <div className="text-2xl font-bold mt-2 text-blue-400">{newThisWeek}</div>
+              <div className="text-2xl font-bold mt-2 text-blue-400">N/A</div>
             </Card>
           </div>
 

@@ -15,11 +15,7 @@ export const DoctorSchedulePage: React.FC = () => {
   const navigate = useNavigate();
   const [selectedDate, setSelectedDate] = useState('');
 
-  const appointments: Appointment[] = [
-    { id: 'A-001', time: '09:00 AM', patient: 'Jane Doe', reason: 'Routine Checkup', status: 'Confirmed' },
-    { id: 'A-002', time: '10:30 AM', patient: 'John Smith', reason: 'Follow-up Visit', status: 'Pending' },
-    { id: 'A-003', time: '02:00 PM', patient: 'Maria Garcia', reason: 'Consultation', status: 'In Progress' },
-  ];
+  const appointments: Appointment[] = [];
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -36,8 +32,8 @@ export const DoctorSchedulePage: React.FC = () => {
 
   return (
     <BaseLayout resourceName="Appointments">
-      <div className="rounded-3xl bg-linear-to-br from-slate-100 via-white to-blue-50 p-6 shadow-sm ring-1 ring-slate-200">
-        <div className="mx-auto max-w-6xl">
+      <div className="w-full rounded-3xl bg-linear-to-br from-slate-100 via-white to-blue-50 p-6 shadow-sm ring-1 ring-slate-200">
+        <div className="mx-auto w-full">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <p className="text-sm font-medium uppercase tracking-[0.2em] text-blue-600">Calendar</p>
@@ -58,21 +54,21 @@ export const DoctorSchedulePage: React.FC = () => {
                 <span className="text-sm text-slate-500">Appointments</span>
                 <CalendarDaysIcon className="h-5 w-5 text-blue-600" />
               </div>
-              <p className="mt-3 text-2xl font-bold text-gray-900">12</p>
+              <p className="mt-3 text-2xl font-bold text-gray-900">N/A</p>
             </div>
             <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-slate-500">Available slots</span>
                 <ClockIcon className="h-5 w-5 text-indigo-600" />
               </div>
-              <p className="mt-3 text-2xl font-bold text-gray-900">08</p>
+              <p className="mt-3 text-2xl font-bold text-gray-900">N/A</p>
             </div>
             <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-slate-500">Patients today</span>
                 <UserGroupIcon className="h-5 w-5 text-emerald-600" />
               </div>
-              <p className="mt-3 text-2xl font-bold text-gray-900">06</p>
+              <p className="mt-3 text-2xl font-bold text-gray-900">N/A</p>
             </div>
           </div>
 
@@ -103,7 +99,7 @@ export const DoctorSchedulePage: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {appointments.map((item) => (
+                {appointments.length ? appointments.map((item) => (
                   <tr key={item.id} className="border-t border-slate-200 hover:bg-slate-50">
                     <td className="px-5 py-4 font-semibold text-gray-900">{item.time}</td>
                     <td className="px-5 py-4 text-gray-700">{item.patient}</td>
@@ -118,7 +114,7 @@ export const DoctorSchedulePage: React.FC = () => {
                       </button>
                     </td>
                   </tr>
-                ))}
+                )) : <tr><td colSpan={4} className="px-5 py-8 text-center text-sm text-slate-400">No appointment data available.</td></tr>}
               </tbody>
             </table>
           </div>

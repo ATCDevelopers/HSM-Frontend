@@ -13,17 +13,17 @@ export default function PharmacyPortal() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full">
             <Card padding="p-4" className="text-center">
               <div className="text-sm text-gray-500">Pending prescriptions</div>
-              <div className="text-xl font-bold mt-2">8</div>
+              <div className="text-xl font-bold mt-2">N/A</div>
               <div className="mt-3 flex justify-center"><Button onClick={() => {}}>Process</Button></div>
             </Card>
             <Card padding="p-4" className="text-center">
               <div className="text-sm text-gray-500">Low stock items</div>
-              <div className="text-xl font-bold mt-2 text-red-600">5</div>
+              <div className="text-xl font-bold mt-2 text-red-600">N/A</div>
               <div className="mt-3 flex justify-center"><Button variant="outline" onClick={() => {}}>View stock</Button></div>
             </Card>
             <Card padding="p-4" className="text-center">
               <div className="text-sm text-gray-500">Dispensing today</div>
-              <div className="text-xl font-bold mt-2">23</div>
+              <div className="text-xl font-bold mt-2">N/A</div>
               <div className="mt-3 flex justify-center"><Button variant="ghost" onClick={() => {}}>Reports</Button></div>
             </Card>
           </div>

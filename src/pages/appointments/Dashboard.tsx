@@ -8,28 +8,15 @@ import {
   XCircleIcon,
 } from '@heroicons/react/24/outline';
 import { useNavigate } from 'react-router-dom';
-import BaseLayout from '../../components/layouts/BaseLayout';
+import BaseLayout from '../../components/layouts/BaseLayout.tsx';
 
 export const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
 
-  const stats = [
-    { title: 'Total Today', value: '12', tone: 'blue', detail: '+3 from yesterday', route: '/appointments/schedule', icon: CalendarDaysIcon },
-    { title: 'In Progress', value: '3', tone: 'indigo', detail: '2 waiting room', route: '/appointments/history', icon: ClockIcon },
-    { title: 'Completed', value: '7', tone: 'green', detail: '94% success', route: '/appointments/history', icon: CheckCircleIcon },
-    { title: 'Cancelled', value: '2', tone: 'red', detail: '1 rescheduled', route: '/appointments/history', icon: XCircleIcon },
-  ];
-
-  const todayAppointments = [
-    { time: '09:00 AM', patient: 'Jane Doe', doctor: 'Dr. Sarah Smith', status: 'Confirmed' },
-    { time: '10:30 AM', patient: 'John Smith', doctor: 'Dr. Daniel Lee', status: 'Waiting' },
-    { time: '01:15 PM', patient: 'Maria Garcia', doctor: 'Dr. Emily Brown', status: 'In Progress' },
-  ];
-
   return (
     <BaseLayout resourceName="Appointments">
-      <div className="rounded-3xl bg-linear-to-br from-blue-50 via-white to-indigo-50 p-6 shadow-sm ring-1 ring-blue-100">
-        <div className="mx-auto max-w-6xl">
+      <div className="w-full rounded-3xl bg-linear-to-br from-blue-50 via-white to-indigo-50 p-6 shadow-sm ring-1 ring-blue-100">
+        <div className="mx-auto w-full">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <p className="text-sm font-medium uppercase tracking-[0.2em] text-blue-600">Overview</p>
@@ -45,8 +32,11 @@ export const DashboardPage: React.FC = () => {
             </button>
           </div>
 
+          <div className="mt-6 rounded-2xl border border-dashed border-slate-300 bg-white/70 p-8 text-center text-sm text-slate-500">
+            Appointment summary data will appear here when the dashboard API is connected.
+          </div>
           <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            {stats.map(({ title, value, tone, detail, route, icon: Icon }) => (
+            {[] .map(({ title, value, tone, detail, route, icon: Icon }) => (
               <button
                 key={title}
                 type="button"
@@ -83,7 +73,7 @@ export const DashboardPage: React.FC = () => {
               </div>
 
               <div className="mt-5 space-y-3">
-                {todayAppointments.map((item) => (
+                {[].map((item) => (
                   <div key={item.time} className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 p-3">
                     <div>
                       <p className="font-semibold text-gray-900">{item.patient}</p>
@@ -97,6 +87,7 @@ export const DashboardPage: React.FC = () => {
                     </div>
                   </div>
                 ))}
+                <p className="text-sm text-slate-400">No appointment data available.</p>
               </div>
             </div>
 
@@ -111,33 +102,7 @@ export const DashboardPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="mt-6 space-y-5">
-                <div>
-                  <div className="flex items-center justify-between text-sm text-slate-300">
-                    <span>Check-in rate</span>
-                    <span className="font-semibold text-white">86%</span>
-                  </div>
-                  <div className="mt-2 h-2.5 rounded-full bg-white/10">
-                    <div className="h-2.5 w-[86%] rounded-full bg-linear-to-r from-blue-400 to-cyan-300" />
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex items-center justify-between text-sm text-slate-300">
-                    <span>Doctor utilization</span>
-                    <span className="font-semibold text-white">72%</span>
-                  </div>
-                  <div className="mt-2 h-2.5 rounded-full bg-white/10">
-                    <div className="h-2.5 w-[72%] rounded-full bg-linear-to-r from-violet-400 to-indigo-300" />
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-8 rounded-2xl bg-white/5 p-4">
-                <p className="text-sm text-slate-300">Next appointment</p>
-                <p className="mt-2 text-lg font-semibold">Dr. James Wilson</p>
-                <p className="mt-1 text-sm text-slate-300">11:00 AM • Follow-up Review</p>
-              </div>
+              <p className="mt-6 rounded-2xl bg-white/5 p-4 text-sm text-slate-300">Performance data will appear when appointment reporting is available.</p>
             </div>
           </div>
         </div>

@@ -1,33 +1,15 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import BaseLayout from "../../components/layouts/BaseLayout";
 import Button from "../../components/atoms/ui/Button";
 import Input from "../../components/atoms/forms/Input";
-import { readUsers } from "./usersStorage";
-
-interface Note { id: string; userId: string; text: string; createdAt: string }
-const storageKey = 'hms_user_notes';
-function readNotes(): Note[] { try { const raw = localStorage.getItem(storageKey); const parsed = raw ? JSON.parse(raw) : []; return Array.isArray(parsed) ? parsed : []; } catch { return []; } }
-function writeNotes(notes: Note[]) { localStorage.setItem(storageKey, JSON.stringify(notes)); }
+import { userAPI, type User } from "../../services/userAPI";
 
 export default function Notes() {
-  const [notes, setNotes] = useState<Note[]>([]);
-  const [text, setText] = useState("");
+  const [users, setUsers] = useState<User[]>([]);
   const [userId, setUserId] = useState<string>("");
-  const users = readUsers();
+  const [error, setError] = useState("Notes API is not available yet.");
 
-  useEffect(() => { setNotes(readNotes()); if (users.length) setUserId(users[0].id); }, []);
-
-  function addNote() {
-    if (!text.trim()) return;
-    const n: Note = { id: `N-${Date.now()}`, userId: userId || (users[0] && users[0].id) || '', text: text.trim(), createdAt: new Date().toISOString() };
-    const next = [n, ...notes];
-    writeNotes(next); setNotes(next); setText('');
-  }
-
-  function removeNote(id: string) {
-    if (!confirm('Delete note?')) return;
-    const next = notes.filter(n => n.id !== id); writeNotes(next); setNotes(next);
-  }
+  useEffect(() => { userAPI.list().then((loadedUsers) => { setUsers(loadedUsers); setUserId(loadedUsers[0]?.id ?? ""); }).catch((requestError: unknown) => setError(requestError instanceof Error ? requestError.message : "Failed to load users")); }, []);
 
   return (
     <BaseLayout resourceName="User Notes">
@@ -44,24 +26,13 @@ export default function Notes() {
                 </select>
               </label>
               <div className="md:col-span-3 w-full">
-                <Input label="New note" value={text} onChange={(e) => setText(e.target.value)} placeholder="Write a note for selected user..." />
-                <div className="flex justify-end mt-3"><Button onClick={addNote}>Add note</Button></div>
+                <Input label="New note" value="" onChange={() => undefined} placeholder="Notes API is not available yet" disabled />
+                <div className="flex justify-end mt-3"><Button disabled onClick={() => undefined}>Add note</Button></div>
               </div>
             </div>
 
             <div className="space-y-3 w-full">
-              {notes.length ? notes.map(n => (
-                <div key={n.id} className="rounded-lg border border-gray-100 p-3">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <div className="text-sm font-medium text-gray-900">{(users.find(u => u.id === n.userId)?.firstName) || 'User'}</div>
-                      <div className="text-xs text-gray-400">{new Date(n.createdAt).toLocaleString()}</div>
-                    </div>
-                    <div className="text-sm text-red-600 cursor-pointer" onClick={() => removeNote(n.id)}>Delete</div>
-                  </div>
-                  <div className="mt-2 text-sm text-gray-700">{n.text}</div>
-                </div>
-              )) : <div className="text-sm text-gray-400">No notes yet.</div>}
+              <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">{error}</div>
             </div>
           </div>
         </div>
