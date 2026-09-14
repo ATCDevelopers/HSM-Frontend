@@ -10,30 +10,27 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-     
       - name: Checkout Code
         uses: actions/checkout@v4
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
 
-     
       - name: Install & Build Frontend
         run: |
           npm ci
           npm run build
 
-    
       - name: Copy Compiled Files to VPS
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ secrets.FRONTEND_DEPLOYMENT }}          
-          username: ${{ secrets.FRONTEND_DEPLOYMENT_USERNAME }} 
-          key: ${{ secrets.FRONTEND_DEPLOYMENT_PRIVATE_KEY }} 
+          host: ${{ secrets.FRONTEND_DEPLOYMENT }}
+          username: ${{ secrets.FRONTEND_DEPLOYMENT_USERNAME }}
+          key: ${{ secrets.FRONTEND_DEPLOYMENT_PRIVATE_KEY }}
           port: 22
-          source: "dist/*"                                  
-          target: "/var/www/hospital-management-system/HSM-Frontend"                  
+          source: "dist/*"
+          target: "/var/www/hospital-management-system/HSM-Frontend/dist"
           strip_components: 1
