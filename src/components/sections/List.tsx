@@ -26,8 +26,7 @@
  * // Basic list with search results
  * <List
  *   items={[
- *     { title: "John Doe", description: "Software Engineer", subtitle: "Active now" },
- *     { title: "Jane Smith", description: "Product Manager", subtitle: "Away" }
+ *     { title: "Example item", description: "Description", subtitle: "Status" }
  *   ]}
  *   onItemClick={handleUserClick}
  *   variant="default"

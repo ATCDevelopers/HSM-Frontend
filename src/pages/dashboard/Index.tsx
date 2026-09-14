@@ -1,9 +1,3 @@
-/**
- * Dashboard - Main dashboard page
- *
- * This is the home page of the application.
- * Add your dashboard widgets, statistics, and charts here.
- */
 function Dashboard() {
     return (
         <div className="p-6">

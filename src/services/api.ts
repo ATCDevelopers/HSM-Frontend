@@ -1,102 +1,88 @@
-import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse, AxiosError } from "axios";
-import {toast} from "./toast";
-import config from "../config/projectConfig";
+import axios from 'axios';
 
-/** HTTP methods that represent a state change worth confirming with a toast. */
-const MUTATION_METHODS = ["post", "put", "patch", "delete"];
+const BASE_URL = process.env.VITE_BACKEND_BASE_URL ;
 
-/**
- * Recursively converts object keys between cases.
- *
- * The Laravel API speaks snake_case; the frontend speaks camelCase. These
- * interceptors translate at the boundary so components only ever see camelCase.
- * Only plain objects/arrays are touched — FormData, Blobs, Dates, etc. pass through.
- */
-const toCamel = (s: string): string => s.replace(/_([a-z0-9])/g, (_, c) => c.toUpperCase());
-const toSnake = (s: string): string => s.replace(/([A-Z])/g, "_$1").toLowerCase();
-
-const isPlainObject = (v: unknown): v is Record<string, unknown> =>
-    v !== null && typeof v === "object" && (v.constructor === Object || v.constructor === undefined);
-
-const convertKeys = <T>(input: unknown, fn: (s: string) => string): T => {
-    if (Array.isArray(input)) return input.map((item) => convertKeys(item, fn)) as T;
-    if (isPlainObject(input)) {
-        return Object.fromEntries(
-            Object.entries(input).map(([key, value]) => [fn(key), convertKeys(value, fn)]),
-        ) as T;
-    }
-    return input as T;
+export const setToken = (token: string): void => {
+  sessionStorage.setItem('accessToken', token);
 };
 
-/**
- * Axios instance configured for API requests
- */
-const api: AxiosInstance = axios.create({
-    /**
-     * Base URL for all API requests
-     * @type {string}
-     */
-    baseURL: config.api.baseURL,
+export const clearToken = (): void => {
+  sessionStorage.removeItem('accessToken');
+};
 
-    /**
-     * Default headers sent with every request
-     */
-    headers: {
-        "Content-Type": "application/json",
-    },
+export const getToken = (): string | null => {
+  return sessionStorage.getItem('accessToken');
+};
+
+
+
+ const API = axios.create({
+  baseURL: BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  withCredentials: true, 
 });
 
-/** localStorage key under which the bearer token is persisted. */
-export const TOKEN_KEY = config.api.tokenKey;
-
-export const getToken = (): string | null => localStorage.getItem(TOKEN_KEY);
-export const setToken = (token: string): void => localStorage.setItem(TOKEN_KEY, token);
-export const clearToken = (): void => localStorage.removeItem(TOKEN_KEY);
-
-// Outgoing: attach the bearer token (if any) and convert camelCase -> snake_case.
-// DEV: Token is optional for development - requests work without auth
-// To re-enable authentication, see: docs/RE-ENABLE-AUTHENTICATION.md
-api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
-    const token = getToken();
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-    }
-    // To enforce token presence (when auth is re-enabled):
-    // if (!token) {
-    //     throw new Error("Authentication required");
-    // }
-    if (isPlainObject(config.data) || Array.isArray(config.data)) {
-        config.data = convertKeys(config.data, toSnake);
+// Request Interceptor: Automatically inject the access token into every outgoing API request
+API.interceptors.request.use(
+  (config) => {
+    const token = sessionStorage.getItem('accessToken');
+    if (token && config.headers) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
-});
-
-// Incoming: snake_case response -> camelCase for the frontend.
-// On 401 the token is stale/invalid, so drop it; the AuthProvider will
-// observe the missing token and route the user back to login.
-api.interceptors.response.use(
-    (response: AxiosResponse) => {
-        if (isPlainObject(response.data) || Array.isArray(response.data)) {
-            response.data = convertKeys(response.data, toCamel);
-        }
-        // Auto-confirm successful mutations (create/update/delete/restore) with a
-        // success toast, using the message the API returns. Read-only GETs and
-        // responses without a message are ignored.
-        const method = response.config?.method?.toLowerCase();
-        if (method && MUTATION_METHODS.includes(method) && isPlainObject(response.data) && response.data.message) {
-            toast.success(response.data.message as string);
-        }
-        return response;
-    },
-    (error: AxiosError) => {
-        if (error.response?.status === 401) {
-            clearToken();
-        }
-        if (isPlainObject(error.response?.data) || Array.isArray(error.response?.data)) {
-            error.response.data = convertKeys(error.response.data, toCamel);
-        }
-        return Promise.reject(error);
-    },
+  },
+  (error) => Promise.reject(error)
 );
 
-export default api;
+// Response Interceptor: Capture tokens from backend responses or handle token refresh logic
+API.interceptors.response.use(
+  (response) => {
+    if (response.data && response.data.accessToken) {
+      sessionStorage.setItem('accessToken', response.data.accessToken);
+    }
+    return response;
+  },
+  async (error) => {
+    const originalRequest = error.config;
+
+    // 1. Guardrail: If the refresh call itself fails, break the infinite loop immediately
+    if (originalRequest.url?.includes('/auth/refresh')) {
+      sessionStorage.removeItem('accessToken');
+      window.location.href = '/login'; // Redirect to log out the user
+      return Promise.reject(error);
+    }
+
+    // 2. Handle standard protected endpoint 401 expiration
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      try {
+        const refreshResponse = await axios.post(
+          `${BASE_URL}/auth/refresh`,
+          {},
+          { withCredentials: true } 
+        );
+
+        const newAccessToken = refreshResponse.data.accessToken;
+        sessionStorage.setItem('accessToken', newAccessToken);
+
+        if (originalRequest.headers) {
+          originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+        }
+        // Re-execute original failed request using the named instance
+        return API(originalRequest);
+      } catch (refreshError) {
+        // Break loop if token rotation fails
+        sessionStorage.removeItem('accessToken');
+        window.location.href = '/login';
+        return Promise.reject(refreshError);
+      }
+    }
+
+    return Promise.reject(error);
+  }
+);
+
+export default API;

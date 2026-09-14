@@ -9,13 +9,13 @@ export const AppointmentStatusPage: React.FC = () => {
 
   return (
     <BaseLayout resourceName="Appointments">
-      <div className="rounded-3xl bg-linear-to-br from-indigo-50 via-white to-blue-50 p-6 shadow-sm ring-1 ring-indigo-100">
-        <div className="mx-auto max-w-5xl">
+      <div className="w-full rounded-3xl bg-linear-to-br from-indigo-50 via-white to-blue-50 p-6 shadow-sm ring-1 ring-indigo-100">
+        <div className="mx-auto w-full">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <p className="text-sm font-medium uppercase tracking-[0.2em] text-indigo-600">Status</p>
               <h2 className="mt-2 text-2xl font-bold text-gray-900">Appointment Status</h2>
-              <p className="mt-1 text-sm text-gray-500">Real-time tracking for appointment ID: {id || 'APT-8849'}</p>
+              <p className="mt-1 text-sm text-gray-500">Real-time tracking for appointment ID: {id || 'Not selected'}</p>
             </div>
             <div className="flex flex-wrap gap-2">
               <button
@@ -40,7 +40,7 @@ export const AppointmentStatusPage: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm uppercase tracking-[0.2em] text-indigo-100">Current state</p>
-                  <p className="mt-3 text-3xl font-bold">In Progress</p>
+                  <p className="mt-3 text-3xl font-bold">Unavailable</p>
                 </div>
                 <div className="flex h-16 w-16 items-center justify-center rounded-full border-4 border-white/30 bg-white/10 text-lg font-bold">
                   72%
@@ -53,7 +53,7 @@ export const AppointmentStatusPage: React.FC = () => {
                     <ClockIcon className="h-5 w-5 text-cyan-200" />
                     <span className="text-sm text-indigo-100">Estimated wait</span>
                   </div>
-                  <span className="font-semibold">~15 mins</span>
+                  <span className="font-semibold">Available from API</span>
                 </div>
 
                 <div className="flex items-center justify-between rounded-2xl bg-white/10 p-3">
@@ -61,7 +61,7 @@ export const AppointmentStatusPage: React.FC = () => {
                     <ShieldCheckIcon className="h-5 w-5 text-cyan-200" />
                     <span className="text-sm text-indigo-100">Check-in status</span>
                   </div>
-                  <span className="font-semibold">Verified</span>
+                  <span className="font-semibold">Available from API</span>
                 </div>
               </div>
             </div>
@@ -70,10 +70,10 @@ export const AppointmentStatusPage: React.FC = () => {
               <h3 className="text-lg font-bold text-gray-900">Appointment details</h3>
               <div className="mt-5 space-y-4">
                 {[
-                  ['Appointment ID', '#APT-8849'],
-                  ['Doctor', 'Dr. Sarah Smith'],
-                  ['Scheduled time', '11:30 AM'],
-                  ['Department', 'General Medicine'],
+                  ['Appointment ID', id || 'Not selected'],
+                  ['Doctor', 'Available from API'],
+                  ['Scheduled time', 'Available from API'],
+                  ['Department', 'Available from API'],
                 ].map(([label, value]) => (
                   <div key={label} className="flex items-center justify-between border-b border-slate-100 pb-3 last:border-b-0 last:pb-0">
                     <span className="text-sm text-slate-500">{label}</span>
@@ -97,9 +97,7 @@ export const AppointmentStatusPage: React.FC = () => {
 
             <div className="mt-6 space-y-4">
               {[
-                ['Check-in complete', '10:20 AM', 'done'],
-                ['Doctor consultation', '11:00 AM', 'active'],
-                ['Prescription ready', '11:35 AM', 'upcoming'],
+                ['Appointment progress', 'Available from API', 'upcoming'],
               ].map(([title, time, state], index) => (
                 <div key={title} className="flex items-center gap-4">
                   <div className="flex flex-col items-center">

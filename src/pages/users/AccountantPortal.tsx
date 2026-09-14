@@ -13,17 +13,17 @@ export default function AccountantPortal() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full">
             <Card padding="p-4" className="text-center">
               <div className="text-sm text-gray-500">Open invoices</div>
-              <div className="text-xl font-bold mt-2">12</div>
+              <div className="text-xl font-bold mt-2">N/A</div>
               <div className="mt-3 flex justify-center"><Button onClick={() => {}}>Review</Button></div>
             </Card>
             <Card padding="p-4" className="text-center">
               <div className="text-sm text-gray-500">Outstanding payments</div>
-              <div className="text-xl font-bold mt-2 text-red-600">3</div>
+              <div className="text-xl font-bold mt-2 text-red-600">N/A</div>
               <div className="mt-3 flex justify-center"><Button variant="outline" onClick={() => {}}>Collections</Button></div>
             </Card>
             <Card padding="p-4" className="text-center">
               <div className="text-sm text-gray-500">Financial reports</div>
-              <div className="text-xl font-bold mt-2">Monthly</div>
+              <div className="text-xl font-bold mt-2">N/A</div>
               <div className="mt-3 flex justify-center"><Button variant="ghost" onClick={() => {}}>Export</Button></div>
             </Card>
           </div>

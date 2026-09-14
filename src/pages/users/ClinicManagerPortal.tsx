@@ -13,17 +13,17 @@ export default function ClinicManagerPortal() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full">
             <Card padding="p-4" className="text-center">
               <div className="text-sm text-gray-500">Open shifts</div>
-              <div className="text-xl font-bold mt-2">4</div>
+              <div className="text-xl font-bold mt-2">N/A</div>
               <div className="mt-3 flex justify-center"><Button onClick={() => {}}>Manage roster</Button></div>
             </Card>
             <Card padding="p-4" className="text-center">
               <div className="text-sm text-gray-500">Clinic occupancy</div>
-              <div className="text-xl font-bold mt-2">72%</div>
+              <div className="text-xl font-bold mt-2">N/A</div>
               <div className="mt-3 flex justify-center"><Button variant="outline" onClick={() => {}}>View beds</Button></div>
             </Card>
             <Card padding="p-4" className="text-center">
               <div className="text-sm text-gray-500">Staff alerts</div>
-              <div className="text-xl font-bold mt-2">1</div>
+              <div className="text-xl font-bold mt-2">N/A</div>
               <div className="mt-3 flex justify-center"><Button variant="ghost" onClick={() => {}}>Respond</Button></div>
             </Card>
           </div>

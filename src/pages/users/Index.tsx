@@ -5,7 +5,8 @@ import Dropdown from "../../components/atoms/ui/Dropdown";
 import Modal from "../../components/atoms/ui/Modal";
 import Button from "../../components/atoms/ui/Button";
 import Input from "../../components/atoms/forms/Input";
-import { User, readUsers, writeUsers, defaultUsers, generateUserId } from "./usersStorage";
+import { userAPI, type User } from "../../services/userAPI";
+import Swal from "sweetalert2";
 
 export default function UsersIndex() {
   const [users, setUsers] = useState<User[]>([]);
@@ -13,13 +14,17 @@ export default function UsersIndex() {
   const [selected, setSelected] = useState<User | null>(null);
   const [editOpen, setEditOpen] = useState(false);
   const [viewOpen, setViewOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const [page, setPage] = useState(1);
+  const itemsPerPage = 10;
 
   useEffect(() => {
-    const saved = readUsers();
-    if (!saved.length) {
-      writeUsers(defaultUsers);
-      setUsers(defaultUsers);
-    } else setUsers(saved);
+    userAPI.list()
+      .then(setUsers)
+      .catch((requestError: unknown) => setError(requestError instanceof Error ? requestError.message : "Failed to load users"))
+      .finally(() => setLoading(false));
   }, []);
 
   const filtered = users.filter((u) => {
@@ -27,6 +32,14 @@ export default function UsersIndex() {
     if (!s) return true;
     return [u.id, u.firstName, u.lastName, u.email, u.role].some((v) => v.toLowerCase().includes(s));
   });
+
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+  const paginated = filtered.slice((page - 1) * itemsPerPage, page * itemsPerPage);
+
+  // Reset page when search changes
+  useEffect(() => {
+    setPage(1);
+  }, [search]);
 
   function openView(u: User) {
     setSelected(u);
@@ -37,18 +50,48 @@ export default function UsersIndex() {
     setEditOpen(true);
   }
 
-  function handleDelete(u: User) {
-    if (!confirm(`Delete ${u.firstName} ${u.lastName}?`)) return;
-    const updated = users.filter((x) => x.id !== u.id);
-    writeUsers(updated);
-    setUsers(updated);
+  async function handleDelete(u: User) {
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: `Do you want to delete ${u.firstName} ${u.lastName}?`,
+      icon: 'warning',
+      allowOutsideClick: false,
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Yes, delete it!'
+    });
+    if (!result.isConfirmed) return;
+    
+    userAPI.remove(u.id)
+      .then(() => {
+        setUsers((current) => current.filter((x) => x.id !== u.id));
+        Swal.fire('Deleted!', 'The user has been deleted.', 'success');
+      })
+      .catch((requestError: unknown) => {
+        const msg = requestError instanceof Error ? requestError.message : "Failed to delete user";
+        setError(msg);
+        Swal.fire('Error', msg, 'error');
+      });
   }
 
-  function handleSave(updated: User) {
-    const list = users.map((u) => (u.id === updated.id ? updated : u));
-    writeUsers(list);
-    setUsers(list);
-    setEditOpen(false);
+  async function handleSave(updated: User) {
+    try {
+      const saved = await userAPI.update(updated.id, updated);
+      setUsers((current) => current.map((u) => (u.id === saved.id ? saved : u)));
+      setEditOpen(false);
+      Swal.fire({
+        title: 'Success!',
+        text: 'User updated successfully.',
+        icon: 'success',
+        timer: 1500,
+        showConfirmButton: false
+      });
+    } catch (requestError: unknown) {
+      const msg = requestError instanceof Error ? requestError.message : "Failed to update user";
+      setError(msg);
+      Swal.fire('Error', msg, 'error');
+    }
   }
 
   return (
@@ -65,6 +108,7 @@ export default function UsersIndex() {
               <Button onClick={() => window.location.assign('/users/register')}>Add user</Button>
             </div>
           </div>
+          {error && <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</div>}
 
           <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white w-full">
             <table className="w-full text-sm">
@@ -74,7 +118,7 @@ export default function UsersIndex() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.length ? filtered.map((u) => (
+                {loading ? <tr><td colSpan={6} className="px-4 py-8 text-center text-sm text-gray-400">Loading users...</td></tr> : paginated.length ? paginated.map((u) => (
                   <tr key={u.id} className="border-t border-gray-100 hover:bg-gray-50">
                     <td className="px-4 py-3 font-semibold text-gray-900">{u.firstName} {u.lastName}</td>
                     <td className="px-4 py-3 text-gray-700">{u.id}</td>
@@ -86,6 +130,46 @@ export default function UsersIndex() {
                 )) : <tr><td colSpan={6} className="px-4 py-8 text-center text-sm text-gray-400">No users found.</td></tr>}
               </tbody>
             </table>
+            
+            {/* Pagination Controls */}
+            {!loading && totalPages > 1 && (
+              <div className="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6">
+                <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-sm text-gray-700">
+                      Showing <span className="font-medium">{(page - 1) * itemsPerPage + 1}</span> to <span className="font-medium">{Math.min(page * itemsPerPage, filtered.length)}</span> of <span className="font-medium">{filtered.length}</span> results
+                    </p>
+                  </div>
+                  <div>
+                    <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+                      <button
+                        onClick={() => setPage(p => Math.max(1, p - 1))}
+                        disabled={page === 1}
+                        className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50"
+                      >
+                        <span className="sr-only">Previous</span>
+                        <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                          <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" />
+                        </svg>
+                      </button>
+                      <span className="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 focus:z-20 focus:outline-offset-0">
+                        Page {page} of {totalPages}
+                      </span>
+                      <button
+                        onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                        disabled={page === totalPages}
+                        className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50"
+                      >
+                        <span className="sr-only">Next</span>
+                        <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                          <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
+                        </svg>
+                      </button>
+                    </nav>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

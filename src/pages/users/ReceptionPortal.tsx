@@ -13,17 +13,17 @@ export default function ReceptionPortal() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full">
             <Card padding="p-4" className="text-center">
               <div className="text-sm text-gray-500">Today arrivals</div>
-              <div className="text-xl font-bold mt-2">18</div>
+              <div className="text-xl font-bold mt-2">N/A</div>
               <div className="mt-3 flex justify-center"><Button onClick={() => {}}>View arrivals</Button></div>
             </Card>
             <Card padding="p-4" className="text-center">
               <div className="text-sm text-gray-500">Waiting time</div>
-              <div className="text-xl font-bold mt-2">00:12</div>
+              <div className="text-xl font-bold mt-2">N/A</div>
               <div className="mt-3 flex justify-center"><Button variant="outline" onClick={() => {}}>Manage queue</Button></div>
             </Card>
             <Card padding="p-4" className="text-center">
               <div className="text-sm text-gray-500">Unpaid bills</div>
-              <div className="text-xl font-bold mt-2 text-red-600">2</div>
+              <div className="text-xl font-bold mt-2 text-red-600">N/A</div>
               <div className="mt-3 flex justify-center"><Button variant="ghost" onClick={() => {}}>Collect</Button></div>
             </Card>
           </div>

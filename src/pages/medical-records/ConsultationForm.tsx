@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import BaseLayout from "../../components/layouts/BaseLayout";
+import BaseLayout from "../../components/layouts/BaseLayout.tsx";
+import API from "../../services/api";
 import StepWizard from "./StepWizard";
 import type { ConsultationFormInput } from "./types";
 
@@ -82,13 +83,6 @@ const STEPS: {
 const ALL_FIELDS = STEPS.flatMap((s) => s.fields);
 const STEP_LABELS = [...STEPS.map((s) => s.label), "Review"];
 
-async function mockSaveConsultation(
-  data: ConsultationFormInput,
-): Promise<void> {
-  console.log("Mock save consultation:", data);
-  await new Promise((res) => setTimeout(res, 500));
-}
-
 export default function ConsultationForm() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -160,7 +154,7 @@ export default function ConsultationForm() {
         preliminary_diagnosis: values.preliminary_diagnosis,
         investigation_requirement: values.investigation_requirement,
       };
-      await mockSaveConsultation(payload);
+      await API.post("consultations", payload);
       setSaved(true);
       setTimeout(goBackToHistory, 1200);
     } finally {

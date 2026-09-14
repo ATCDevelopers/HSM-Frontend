@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import BaseLayout from "../../components/layouts/BaseLayout";
+import API from "../../services/api";
 import StepWizard from "./StepWizard";
 import type { VitalsFormInput } from "./types";
 
@@ -113,11 +114,6 @@ const STEPS: {
 const ALL_FIELDS = STEPS.flatMap((s) => s.fields);
 const STEP_LABELS = [...STEPS.map((s) => s.label), "Review"];
 
-async function mockSaveVitals(data: VitalsFormInput): Promise<void> {
-  console.log("Mock save vitals:", data);
-  await new Promise((res) => setTimeout(res, 500));
-}
-
 export default function VitalsForm() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -197,7 +193,7 @@ export default function VitalsForm() {
         weight: Number(values.weight),
         height: Number(values.height),
       };
-      await mockSaveVitals(payload);
+      await API.post("vitals", payload);
       setSaved(true);
       setTimeout(goBackToHistory, 1200);
     } finally {
