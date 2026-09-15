@@ -14,7 +14,7 @@ function NotFound() {
           The page you requested does not exist or may have moved.
         </p>
         <Link
-          to="/"
+          to="/dashboard"
           className="mt-8 inline-flex rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
         >
           Return to dashboard
