@@ -27,6 +27,7 @@ export const patientAPI = {
     const response = await API.get<ApiResponse<Patient[]>>("patients");
     return response.data.data ?? [];
   },
+  
   get: async (id: string): Promise<Patient> => {
     const response = await API.get<ApiResponse<Patient>>(`patient/${id}`);
     if (!response.data.data) throw new Error(response.data.message ?? "Patient not found");
