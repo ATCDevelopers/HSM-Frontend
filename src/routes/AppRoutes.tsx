@@ -14,7 +14,6 @@ import { DoctorSchedulePage } from "../pages/appointments/Doctor-schedulepage";
 import { PatientHistoryPage } from "../pages/appointments/Patient-appointment";
 import { AppointmentStatusPage } from "../pages/appointments/Status-page";
 
-
 const Home = lazy(() => import("../pages/home/Home"));
 const Dashboard = lazy(() => import("../pages/dashboard/Index"));
 const PatientManagement = lazy(
@@ -23,18 +22,19 @@ const PatientManagement = lazy(
 const RegisterPatient = lazy(
   () => import("../pages/patients/RegisterPatients"),
 );
-const PatientDetails = lazy(
-  () => import("../pages/patients/PatientsDetails"),
-);
+const PatientDetails = lazy(() => import("../pages/patients/PatientsDetails"));
 const EditPatient = lazy(() => import("../pages/patients/EditPatients"));
-
+const Landing = lazy(() => import("../pages/home/Landing"));
+const GetStarted = lazy(() => import("../pages/home/GetStarted"));
 const Index = lazy(() => import("../pages/crud/Index"));
 const Show = lazy(() => import("../pages/crud/Show"));
 const Form = lazy(() => import("../pages/crud/Form"));
 
 const MedicalHistory = lazy(() => import("../pages/medical-records/Index.tsx"));
 const VitalsForm = lazy(() => import("../pages/medical-records/VitalsForm"));
-const MedicalRecordsShow = lazy(() => import("../pages/medical-records/Show.tsx"));
+const MedicalRecordsShow = lazy(
+  () => import("../pages/medical-records/Show.tsx"),
+);
 const ConsultationForm = lazy(
   () => import("../pages/medical-records/ConsultationForm"),
 );
@@ -47,13 +47,14 @@ const PharmacyPortal = lazy(() => import("../pages/users/PharmacyPortal"));
 const LabPortal = lazy(() => import("../pages/users/LabPortal"));
 const AdminPortal = lazy(() => import("../pages/users/AdminPortal"));
 const AccountantPortal = lazy(() => import("../pages/users/AccountantPortal"));
-const ClinicManagerPortal = lazy(() => import("../pages/users/ClinicManagerPortal"));
+const ClinicManagerPortal = lazy(
+  () => import("../pages/users/ClinicManagerPortal"),
+);
 const ReceptionPortal = lazy(() => import("../pages/users/ReceptionPortal"));
 const Notes = lazy(() => import("../pages/users/Notes"));
 
 const ResourceIndex = Index as ComponentType<{ resource: string }>;
 const ResourceShow = Show as ComponentType<{ resource: string }>;
-
 
 function RouteFallback() {
   return (
@@ -68,27 +69,32 @@ function RouteFallback() {
  * unauthenticated users go to /login.
  */
 function RootRedirect() {
-  const { isAuthenticated, user } = useAuth();
-  if (!isAuthenticated) return <Navigate to="/login" replace />;
-  return <Navigate to={getRoleDashboard(user?.role ?? "")} replace />;
+  return <Landing />;
 }
 
 function AppRoutes() {
   return (
     <Suspense fallback={<RouteFallback />}>
       <Routes>
-
         {/* ── Public routes ─────────────────────────────────────────────── */}
+
+        {/* Landing page — first page when the application opens */}
+        <Route path="/" element={<Landing />} />
+
+        {/* Login page */}
         <Route path="/login" element={<LoginPage />} />
 
-        {/* Root → role-based dashboard redirect */}
-        <Route path="/" element={<RootRedirect />} />
+        {/* Get Started page */}
+        <Route path="/get-started" element={<GetStarted />} />
 
         {/* ── Protected routes ──────────────────────────────────────────── */}
-
         <Route
           path="/home"
-          element={<ProtectedRoute><Home /></ProtectedRoute>}
+          element={
+            <ProtectedRoute>
+              <Home />
+            </ProtectedRoute>
+          }
         />
 
         <Route
@@ -103,47 +109,279 @@ function AppRoutes() {
         />
 
         {/* Appointments */}
-        <Route path="/appointments" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
-        <Route path="/appointments/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
-        <Route path="/appointments/new" element={<ProtectedRoute><NewBookingPage /></ProtectedRoute>} />
-        <Route path="/booking/new" element={<ProtectedRoute><NewBookingPage /></ProtectedRoute>} />
-        <Route path="/appointments/schedule" element={<ProtectedRoute><DoctorSchedulePage /></ProtectedRoute>} />
-        <Route path="/doctor/schedule" element={<ProtectedRoute><DoctorSchedulePage /></ProtectedRoute>} />
-        <Route path="/appointments/history" element={<ProtectedRoute><PatientHistoryPage /></ProtectedRoute>} />
-        <Route path="/patient/history" element={<ProtectedRoute><PatientHistoryPage /></ProtectedRoute>} />
-        <Route path="/appointments/:id/status" element={<ProtectedRoute><AppointmentStatusPage /></ProtectedRoute>} />
-        <Route path="/appointment/:id/status" element={<ProtectedRoute><AppointmentStatusPage /></ProtectedRoute>} />
+        <Route
+          path="/appointments"
+          element={
+            <ProtectedRoute>
+              <DashboardPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/appointments/dashboard"
+          element={
+            <ProtectedRoute>
+              <DashboardPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/appointments/new"
+          element={
+            <ProtectedRoute>
+              <NewBookingPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/booking/new"
+          element={
+            <ProtectedRoute>
+              <NewBookingPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/appointments/schedule"
+          element={
+            <ProtectedRoute>
+              <DoctorSchedulePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/doctor/schedule"
+          element={
+            <ProtectedRoute>
+              <DoctorSchedulePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/appointments/history"
+          element={
+            <ProtectedRoute>
+              <PatientHistoryPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/patient/history"
+          element={
+            <ProtectedRoute>
+              <PatientHistoryPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/appointments/:id/status"
+          element={
+            <ProtectedRoute>
+              <AppointmentStatusPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/appointment/:id/status"
+          element={
+            <ProtectedRoute>
+              <AppointmentStatusPage />
+            </ProtectedRoute>
+          }
+        />
 
         {/* Patients */}
-        <Route path="/patients" element={<ProtectedRoute><PatientManagement /></ProtectedRoute>} />
-        <Route path="/patients/register" element={<ProtectedRoute><RegisterPatient /></ProtectedRoute>} />
-        <Route path="/patients/new" element={<ProtectedRoute><Form resource="patients" /></ProtectedRoute>} />
-        <Route path="/patients/:id/edit" element={<ProtectedRoute><EditPatient /></ProtectedRoute>} />
-        <Route path="/patients/:id" element={<ProtectedRoute><PatientDetails /></ProtectedRoute>} />
+        <Route
+          path="/patients"
+          element={
+            <ProtectedRoute>
+              <PatientManagement />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/patients/register"
+          element={
+            <ProtectedRoute>
+              <RegisterPatient />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/patients/new"
+          element={
+            <ProtectedRoute>
+              <Form resource="patients" />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/patients/:id/edit"
+          element={
+            <ProtectedRoute>
+              <EditPatient />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/patients/:id"
+          element={
+            <ProtectedRoute>
+              <PatientDetails />
+            </ProtectedRoute>
+          }
+        />
 
         {/* Medical records */}
-        <Route path="/medical-records" element={<ProtectedRoute><MedicalHistory /></ProtectedRoute>} />
-        <Route path="/medical-records/vitals/new" element={<ProtectedRoute><VitalsForm /></ProtectedRoute>} />
-        <Route path="/medical-records/:patientId" element={<ProtectedRoute><MedicalRecordsShow /></ProtectedRoute>} />
-        <Route path="/medical-records/consultations/new" element={<ProtectedRoute><ConsultationForm /></ProtectedRoute>} />
+        <Route
+          path="/medical-records"
+          element={
+            <ProtectedRoute>
+              <MedicalHistory />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/medical-records/vitals/new"
+          element={
+            <ProtectedRoute>
+              <VitalsForm />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/medical-records/:patientId"
+          element={
+            <ProtectedRoute>
+              <MedicalRecordsShow />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/medical-records/consultations/new"
+          element={
+            <ProtectedRoute>
+              <ConsultationForm />
+            </ProtectedRoute>
+          }
+        />
 
         {/* Users */}
-        <Route path="/users" element={<ProtectedRoute><UsersIndex /></ProtectedRoute>} />
-        <Route path="/users/index" element={<ProtectedRoute><UsersIndex /></ProtectedRoute>} />
-        <Route path="/users/dashboard" element={<ProtectedRoute><UsersDashboard /></ProtectedRoute>} />
-        <Route path="/users/register" element={<ProtectedRoute><RegisterUser /></ProtectedRoute>} />
-        <Route path="/users/nurse-portal" element={<ProtectedRoute><BaseLayout resourceName="Nurse Portal"><NursePortal /></BaseLayout></ProtectedRoute>} />
-        <Route path="/users/pharmacy-portal" element={<ProtectedRoute><BaseLayout resourceName="Pharmacy Portal"><PharmacyPortal /></BaseLayout></ProtectedRoute>} />
-        <Route path="/users/lab-portal" element={<ProtectedRoute><BaseLayout resourceName="Lab Portal"><LabPortal /></BaseLayout></ProtectedRoute>} />
-        <Route path="/users/admin-portal" element={<ProtectedRoute><BaseLayout resourceName="Admin Portal"><AdminPortal /></BaseLayout></ProtectedRoute>} />
-        <Route path="/users/accountant-portal" element={<ProtectedRoute><BaseLayout resourceName="Accountant Portal"><AccountantPortal /></BaseLayout></ProtectedRoute>} />
-        <Route path="/users/clinic-manager-portal" element={<ProtectedRoute><BaseLayout resourceName="Clinic Manager Portal"><ClinicManagerPortal /></BaseLayout></ProtectedRoute>} />
-        <Route path="/users/reception-portal" element={<ProtectedRoute><BaseLayout resourceName="Reception Portal"><ReceptionPortal /></BaseLayout></ProtectedRoute>} />
-        <Route path="/users/notes" element={<ProtectedRoute><BaseLayout resourceName="User Notes"><Notes /></BaseLayout></ProtectedRoute>} />
+        <Route
+          path="/users"
+          element={
+            <ProtectedRoute>
+              <UsersIndex />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/users/index"
+          element={
+            <ProtectedRoute>
+              <UsersIndex />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/users/dashboard"
+          element={
+            <ProtectedRoute>
+              <UsersDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/users/register"
+          element={
+            <ProtectedRoute>
+              <RegisterUser />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/users/nurse-portal"
+          element={
+            <ProtectedRoute>
+              <BaseLayout resourceName="Nurse Portal">
+                <NursePortal />
+              </BaseLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/users/pharmacy-portal"
+          element={
+            <ProtectedRoute>
+              <BaseLayout resourceName="Pharmacy Portal">
+                <PharmacyPortal />
+              </BaseLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/users/lab-portal"
+          element={
+            <ProtectedRoute>
+              <BaseLayout resourceName="Lab Portal">
+                <LabPortal />
+              </BaseLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/users/admin-portal"
+          element={
+            <ProtectedRoute>
+              <BaseLayout resourceName="Admin Portal">
+                <AdminPortal />
+              </BaseLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/users/accountant-portal"
+          element={
+            <ProtectedRoute>
+              <BaseLayout resourceName="Accountant Portal">
+                <AccountantPortal />
+              </BaseLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/users/clinic-manager-portal"
+          element={
+            <ProtectedRoute>
+              <BaseLayout resourceName="Clinic Manager Portal">
+                <ClinicManagerPortal />
+              </BaseLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/users/reception-portal"
+          element={
+            <ProtectedRoute>
+              <BaseLayout resourceName="Reception Portal">
+                <ReceptionPortal />
+              </BaseLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/users/notes"
+          element={
+            <ProtectedRoute>
+              <BaseLayout resourceName="User Notes">
+                <Notes />
+              </BaseLayout>
+            </ProtectedRoute>
+          }
+        />
 
         {/* 404 */}
         <Route path="*" element={<NotFound />} />
-
       </Routes>
     </Suspense>
   );
