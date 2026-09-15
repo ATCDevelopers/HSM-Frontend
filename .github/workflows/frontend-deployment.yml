@@ -22,6 +22,8 @@ jobs:
 
      
       - name: Install & Build Frontend
+        env:
+          VITE_BACKEND_BASE_URL: "/api/v1"
         run: |
           npm ci
           npm run build
