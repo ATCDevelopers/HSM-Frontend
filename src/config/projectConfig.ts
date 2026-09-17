@@ -36,8 +36,8 @@ interface Config {
 const config: Config = {
     // API Configuration
     api: {
-        baseURL: (import.meta.env.VITE_API_URL as string) || 'http://localhost:8000/api/v1/',
-        baseUrl: (import.meta.env.VITE_BASE_URL as string) || 'http://localhost:8000',
+        baseURL: (import.meta.env.VITE_API_URL as string) || 'http://localhost:5000/api/v1/',
+        baseUrl: (import.meta.env.VITE_BASE_URL as string) || 'http://localhost:5000',
         tokenKey: (import.meta.env.VITE_API_TOKEN_KEY as string) || 'auth_token',
     },
 

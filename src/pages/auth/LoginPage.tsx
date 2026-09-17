@@ -3,6 +3,7 @@ import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useAuth } from "../../auth/AuthContext";
 import { getRoleDashboard } from "../../auth/authAPI";
 import Swal from "sweetalert2";
+import Button from "@/components/atoms/ui/Button";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 

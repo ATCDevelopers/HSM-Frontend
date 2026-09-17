@@ -3,10 +3,13 @@ import API from "./api";
 export interface User {
   id: string;
   firstName: string;
+  secondName?: string | null;
   lastName: string;
   email: string;
+  phoneNumber?: string;
   role: string;
-  status: "ACTIVE" | "INACTIVE";
+  status?: "ACTIVE" | "INACTIVE";
+  imagePath?: string | null;
   photo?: string;
 }
 
@@ -20,6 +23,11 @@ export const userAPI = {
   list: async (): Promise<User[]> => {
     const response = await API.get<ApiResponse<User[]>>("users");
     return response.data.data ?? [];
+  },
+  getById: async (id: string): Promise<User> => {
+    const response = await API.get<ApiResponse<User>>(`users/${id}`);
+    if (!response.data.data) throw new Error(response.data.message ?? "User not found");
+    return response.data.data;
   },
   update: async (id: string, payload: Partial<User>): Promise<User> => {
     const response = await API.put<ApiResponse<User>>(`users/${id}`, payload);
