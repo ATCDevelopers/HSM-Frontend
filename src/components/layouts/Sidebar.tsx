@@ -15,7 +15,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { useSidebar } from "../../contexts/SidebarContext";
 import { useAuth } from "../../auth/AuthContext";
-import { modules } from "../../config/modules";
+import { modules, canAccessModule } from "../../config/modules";
 import Swal from "sweetalert2";
 
 const icons = {
@@ -38,8 +38,10 @@ const icons = {
 
 function Sidebar() {
   const { open } = useSidebar();
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
+
+  const userModules = modules.filter((module) => canAccessModule(module, user?.role));
 
   async function handleLogout() {
     await logout();
@@ -64,7 +66,7 @@ function Sidebar() {
         <span className="text-lg font-bold text-white">HMS</span>
       </div>
       <nav className="flex-1 space-y-1 overflow-y-auto p-4">
-        {modules.map((module) => {
+        {userModules.map((module) => {
           const Icon = icons[module.icon as keyof typeof icons] ?? ClipboardDocumentListIcon;
           return (
             <NavLink

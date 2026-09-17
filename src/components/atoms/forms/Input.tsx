@@ -75,7 +75,7 @@
  * />
  */
 function Input({
-                   label,
+                   label = "",
                    type = "text",
                    placeholder = "",
                    value,

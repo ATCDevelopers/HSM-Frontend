@@ -7,12 +7,15 @@
  * Reference: docs/RE-ENABLE-AUTHENTICATION.md for permission system
  */
 
+import { can, type SubjectNames } from './ability';
+
 export interface Module {
   id: string;
   name: string;
   icon: string;
   path: string;
   description?: string;
+  subject?: SubjectNames;
   permissions?: string[];
   roles?: string[];
   children?: Module[];
@@ -24,9 +27,9 @@ export const modules: Module[] = [
     id: 'dashboard',
     name: 'Dashboard',
     icon: 'Home',
-    path: '/',
+    path: '/dashboard',
     description: 'Overview and statistics',
-    roles: ['SYS_ADMIN', 'MGR', 'DOC', 'NURSE', 'RECEP', 'PHARM', 'LAB_TECH', 'CASHIER', 'ACCT'],
+    roles: ['Admin', 'SYS_ADMIN', 'ClinicManager', 'MGR', 'Doctor', 'DOC', 'Nurse', 'NURSE', 'Receptionist', 'RECEP', 'Pharmacist', 'PHARM', 'LabTechnician', 'LAB_TECH', 'Cashier', 'CASHIER', 'Accountant', 'ACCT'],
   },
 
   // User Management
@@ -36,8 +39,8 @@ export const modules: Module[] = [
     icon: 'Users',
     path: '/users',
     description: 'Manage system users and staff',
-    permissions: ['users.read', 'users.manage'],
-    roles: ['SYS_ADMIN'],
+    subject: 'User',
+    roles: ['Admin', 'SYS_ADMIN', 'ClinicManager', 'MGR'],
     children: [
       { id: 'users-index', name: 'Users', icon: 'Users', path: '/users/index' },
       { id: 'users-dashboard', name: 'Dashboard', icon: 'BarChart3', path: '/users/dashboard' },
@@ -61,8 +64,7 @@ export const modules: Module[] = [
     icon: 'User',
     path: '/patients',
     description: 'Patient records and management',
-    permissions: ['patients.read', 'patients.manage'],
-    roles: ['SYS_ADMIN', 'MGR', 'DOC', 'NURSE', 'RECEP', 'PHARM', 'LAB_TECH', 'CASHIER'],
+    subject: 'Patient',
   },
 
   // Appointments
@@ -72,8 +74,7 @@ export const modules: Module[] = [
     icon: 'Calendar',
     path: '/appointments',
     description: 'Schedule and manage appointments',
-    permissions: ['appointments.read', 'appointments.manage'],
-    roles: ['SYS_ADMIN', 'MGR', 'DOC', 'NURSE', 'RECEP'],
+    subject: 'Appointment',
     children: [
       {
         id: 'appointments-dashboard',
@@ -115,8 +116,7 @@ export const modules: Module[] = [
     icon: 'FileText',
     path: '/medical-records',
     description: 'Electronic medical records and consultations',
-    permissions: ['emr.read', 'emr.write'],
-    roles: ['SYS_ADMIN', 'MGR', 'DOC', 'NURSE'],
+    subject: 'Consultation',
   },
 
   // Laboratory
@@ -126,8 +126,7 @@ export const modules: Module[] = [
     icon: 'Flask',
     path: '/laboratory',
     description: 'Lab tests and results management',
-    permissions: ['laboratory.read', 'laboratory.manage'],
-    roles: ['SYS_ADMIN', 'MGR', 'DOC', 'LAB_TECH'],
+    subject: 'Laboratory',
   },
 
   // Pharmacy
@@ -137,8 +136,7 @@ export const modules: Module[] = [
     icon: 'Pill',
     path: '/pharmacy',
     description: 'Medicines and prescriptions',
-    permissions: ['pharmacy.read', 'pharmacy.manage'],
-    roles: ['SYS_ADMIN', 'MGR', 'DOC', 'PHARM'],
+    subject: 'Pharmacy',
   },
 
   // Billing & Invoices
@@ -148,8 +146,7 @@ export const modules: Module[] = [
     icon: 'DollarSign',
     path: '/billing',
     description: 'Invoices and payments',
-    permissions: ['billing.read', 'billing.manage'],
-    roles: ['SYS_ADMIN', 'MGR', 'RECEP', 'CASHIER', 'ACCT'],
+    subject: 'Billing',
   },
 
   // Insurance
@@ -159,8 +156,7 @@ export const modules: Module[] = [
     icon: 'Shield',
     path: '/insurance',
     description: 'Insurance companies and patient coverage',
-    permissions: ['insurance.read', 'insurance.manage'],
-    roles: ['SYS_ADMIN', 'MGR', 'CASHIER', 'ACCT'],
+    subject: 'Insurance',
   },
 
   // Inventory
@@ -170,19 +166,7 @@ export const modules: Module[] = [
     icon: 'Package',
     path: '/inventory',
     description: 'Stock and inventory management',
-    permissions: ['inventory.read', 'inventory.manage'],
-    roles: ['SYS_ADMIN', 'MGR', 'PHARM', 'ACCT'],
-  },
-
-  // Wards & Beds
-  {
-    id: 'wards',
-    name: 'Wards & Beds',
-    icon: 'Building',
-    path: '/wards',
-    description: 'Ward and bed management',
-    permissions: ['wards.read', 'wards.manage'],
-    roles: ['SYS_ADMIN', 'MGR', 'NURSE'],
+    subject: 'Inventory',
   },
 
   // Reports
@@ -192,8 +176,7 @@ export const modules: Module[] = [
     icon: 'BarChart',
     path: '/reports',
     description: 'System reports and analytics',
-    permissions: ['reports.read'],
-    roles: ['SYS_ADMIN', 'MGR', 'DOC', 'NURSE', 'RECEP', 'PHARM', 'LAB_TECH', 'CASHIER', 'ACCT'],
+    subject: 'Report',
   },
 
   // Settings
@@ -203,44 +186,31 @@ export const modules: Module[] = [
     icon: 'Settings',
     path: '/settings',
     description: 'System configuration',
-    roles: ['SYS_ADMIN'],
+    roles: ['Admin', 'SYS_ADMIN'],
   },
 ];
 
-/**
- * Get modules accessible to a specific role
- */
-export function getModulesByRole(userRole: string): Module[] {
-  return modules.filter(module => 
-    !module.roles || module.roles.includes(userRole)
-  );
+
+export function getModulesByRole(userRole?: string | null): Module[] {
+  if (!userRole) return [];
+  return modules.filter(module => canAccessModule(module, userRole));
 }
 
-/**
- * Get modules accessible based on permissions
- */
-export function getModulesByPermissions(userPermissions: string[]): Module[] {
-  return modules.filter(module => {
-    if (!module.permissions) return true;
-    return module.permissions.some(perm => userPermissions.includes(perm));
-  });
-}
 
-/**
- * Check if a module is accessible to the current user
- */
-export function canAccessModule(module: Module, userRole?: string, userPermissions?: string[]): boolean {
-  // DEV: All modules accessible in development mode
-  // Note: Auth is disabled in development via AuthProvider, so all modules are accessible
-  // See: docs/RE-ENABLE-AUTHENTICATION.md
+export function canAccessModule(module: Module, userRole?: string | null): boolean {
+  if (!userRole) return false;
 
-  if (userRole && module.roles) {
-    return module.roles.includes(userRole);
+  // If explicit roles are declared on module
+  if (module.roles && module.roles.length > 0) {
+    const isRoleAllowed = module.roles.includes(userRole);
+    if (!isRoleAllowed) return false;
   }
 
-  if (userPermissions && module.permissions) {
-    return module.permissions.some(perm => userPermissions.includes(perm));
+  // If module maps to a CASL subject, check read access
+  if (module.subject) {
+    return can('read', module.subject, userRole);
   }
 
   return true;
 }
+

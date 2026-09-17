@@ -3,15 +3,28 @@ import { useNavigate } from "react-router-dom";
 import { EllipsisVerticalIcon } from "@heroicons/react/24/outline";
 import BaseLayout from "../../components/layouts/BaseLayout.tsx";
 import Dropdown from "../../components/atoms/ui/Dropdown";
+import Button from "../../components/atoms/ui/Button";
+import Input from "../../components/atoms/forms/Input";
+import Table from "../../components/sections/Table";
 import { patientAPI, type Patient } from "../../services/patientAPI";
+import { useAuth } from "../../auth/AuthContext";
+import { can } from "../../config/ability";
 import Swal from "sweetalert2";
 
 export default function PatientManagement() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [patients, setPatients] = useState<Patient[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  const canCreate = can('create', 'Patient', user?.role) || can('manage', 'Patient', user?.role);
+  const canUpdate = can('update', 'Patient', user?.role) || can('manage', 'Patient', user?.role);
+  const canDelete = can('delete', 'Patient', user?.role) || can('manage', 'Patient', user?.role);
+
+  const [page, setPage] = useState(1);
+  const itemsPerPage = 10;
 
   useEffect(() => {
     patientAPI.list()
@@ -22,8 +35,17 @@ export default function PatientManagement() {
 
   const filteredPatients = patients.filter((patient) => {
     const search = searchTerm.trim().toLowerCase();
-    return !search || [patient.id, patient.firstName, patient.middleName || "", patient.lastName, patient.phone, patient.email].some((value) => value.toLowerCase().includes(search));
+    const phone = patient.phoneNumber || patient.phone || "";
+    return !search || [patient.id, patient.firstName, patient.middleName || "", patient.lastName, phone, patient.email].some((value) => value.toLowerCase().includes(search));
   });
+
+  const totalPages = Math.ceil(filteredPatients.length / itemsPerPage) || 1;
+  const paginatedPatients = filteredPatients.slice((page - 1) * itemsPerPage, page * itemsPerPage);
+
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm]);
+
   const deletePatient = async (patient: Patient) => {
     const result = await Swal.fire({
       title: "Are you sure?",
@@ -52,22 +74,200 @@ export default function PatientManagement() {
       Swal.fire("Error!", msg, "error");
     }
   };
-  const activePatients = patients.filter((patient) => patient.status === "ACTIVE").length;
+
+  const activePatients = patients.filter((patient) => (patient.status || "ACTIVE") === "ACTIVE").length;
   const deactivePatients = patients.filter((patient) => patient.status === "DEACTIVE").length;
-  const getPatientActions = (patient: Patient) => [
-    { label: "View", onClick: () => navigate(`/patients/${patient.id}`) },
-    { label: "Edit", onClick: () => navigate(`/patients/${patient.id}/edit`) },
-    { label: "Delete", onClick: () => deletePatient(patient), className: "text-red-600 hover:bg-red-50" },
+
+  interface DropdownItem {
+    label: string;
+    onClick: () => void;
+    className?: string;
+  }
+
+  const getPatientActions = (patient: Patient): DropdownItem[] => {
+    const actions: DropdownItem[] = [{ label: "View", onClick: () => navigate(`/patients/${patient.id}`) }];
+    if (canUpdate) {
+      actions.push({ label: "Edit", onClick: () => navigate(`/patients/${patient.id}/edit`) });
+    }
+    if (canDelete) {
+      actions.push({ label: "Delete", onClick: () => deletePatient(patient), className: "text-red-600 hover:bg-red-50" });
+    }
+    return actions;
+  };
+
+  const columns = [
+    {
+      key: "name",
+      title: "Patient",
+      render: (_: any, p: Patient) => (
+        <span className="font-semibold text-gray-900">
+          {p.firstName} {p.middleName ? `${p.middleName} ` : ""}{p.lastName}
+        </span>
+      ),
+    },
+    {
+      key: "id",
+      title: "Patient ID",
+      render: (val: string) => <span className="text-gray-700">{val}</span>,
+    },
+    {
+      key: "gender",
+      title: "Gender",
+      render: (val: string) => <span className="text-gray-700">{val}</span>,
+    },
+    {
+      key: "dateOfBirth",
+      title: "Date of birth",
+      render: (val: string) => (
+        <span className="text-gray-700">
+          {val ? new Date(val).toLocaleDateString() : "N/A"}
+        </span>
+      ),
+    },
+    {
+      key: "phone",
+      title: "Phone",
+      render: (_: any, p: Patient) => (
+        <span className="text-gray-700">{p.phoneNumber || p.phone || "N/A"}</span>
+      ),
+    },
+    {
+      key: "status",
+      title: "Status",
+      render: (val: string) => (
+        <span
+          className={`rounded-full px-2 py-0.5 text-xs font-semibold ${(val || "ACTIVE") === "ACTIVE"
+            ? "bg-green-100 text-green-700"
+            : "bg-red-100 text-red-700"
+            }`}
+        >
+          {val || "ACTIVE"}
+        </span>
+      ),
+    },
+    {
+      key: "actions",
+      title: "Actions",
+      render: (_: any, p: Patient) => (
+        <Dropdown
+          children={null}
+          items={getPatientActions(p)}
+          trigger={<EllipsisVerticalIcon className="h-5 w-5" />}
+          showChevron={false}
+          triggerAriaLabel="Patient actions"
+          position="bottom-right"
+          triggerClassName="border-0 px-2 py-1 text-gray-500 hover:bg-gray-100"
+        />
+      ),
+    },
   ];
 
-  return <BaseLayout resourceName="Patients">
-    <div className="rounded-2xl bg-blue-50 p-6"><div className="mx-auto max-w-6xl">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"><div><h2 className="text-lg font-bold text-gray-900">Patient Management</h2><p className="mt-0.5 text-sm text-gray-500">Manage patient registration, records and information.</p></div><button onClick={() => navigate("/patients/register")} className="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700">Add Patient</button></div>
-      <div className="relative mt-5"><input type="search" value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} placeholder="Search patient name, ID or phone" aria-label="Search patients" className="w-full rounded-xl border border-gray-300 bg-white py-2.5 px-4 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20" /></div>
-      {error && <div className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</div>}
-      <div className="mt-4 overflow-x-auto rounded-xl border border-gray-200 bg-white"><table className="w-full text-sm"><thead className="bg-gray-50 text-left"><tr>{["Patient", "Patient ID", "Gender", "Date of birth", "Phone", "Status", "Actions"].map((heading) => <th key={heading} className="px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-gray-400">{heading}</th>)}</tr></thead><tbody>{loading ? <tr><td colSpan={7} className="px-4 py-8 text-center text-sm text-gray-400">Loading patients...</td></tr> : filteredPatients.length ? filteredPatients.slice(0, 10).map((patient) => <tr key={patient.id} className="border-t border-gray-100 hover:bg-gray-50"><td className="px-4 py-3 font-semibold text-gray-900">{patient.firstName} {patient.lastName}</td><td className="px-4 py-3 text-gray-700">{patient.id}</td><td className="px-4 py-3 text-gray-700">{patient.gender}</td><td className="px-4 py-3 text-gray-700">{patient.dateOfBirth}</td><td className="px-4 py-3 text-gray-700">{patient.phone}</td><td className="px-4 py-3"><span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${patient.status === "ACTIVE" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>{patient.status}</span></td><td className="px-4 py-3"><Dropdown children={null} items={getPatientActions(patient)} trigger={<EllipsisVerticalIcon className="h-5 w-5" />} showChevron={false} triggerAriaLabel="Patient actions" position="bottom-right" triggerClassName="border-0 px-2 py-1 text-gray-500 hover:bg-gray-100" /></td></tr>) : <tr><td colSpan={7} className="px-4 py-8 text-center text-sm text-gray-400">No patients found.</td></tr>}</tbody></table></div>
-      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3"><div className="rounded-xl bg-blue-100 p-3 text-center text-sm font-semibold text-blue-800">Total patients: {patients.length}</div><div className="rounded-xl bg-green-100 p-3 text-center text-sm font-semibold text-green-800">Active patients: {activePatients}</div><div className="rounded-xl bg-red-100 p-3 text-center text-sm font-semibold text-red-800">Deactive patients: {deactivePatients}</div></div>
-      <p className="mt-3 text-xs text-gray-400">Showing {Math.min(filteredPatients.length, 10)} of {filteredPatients.length} patients</p>
-    </div></div>
-  </BaseLayout>;
+  return (
+    <BaseLayout resourceName="Patients">
+      <div className="w-full rounded-2xl bg-blue-50 p-6 min-h-[calc(100vh-6rem)] flex flex-col justify-between">
+        <div className="mx-auto max-w-6xl w-full flex-1 flex flex-col">
+          {/* Sticky Top Stats Summary Card */}
+          <div className="sticky top-0 z-20 mb-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <div className="rounded-xl bg-blue-100 p-3 text-center text-sm font-semibold text-blue-800">
+                Total patients: {patients.length}
+              </div>
+              <div className="rounded-xl bg-green-100 p-3 text-center text-sm font-semibold text-green-800">
+                Active patients: {activePatients}
+              </div>
+              <div className="rounded-xl bg-red-100 p-3 text-center text-sm font-semibold text-red-800">
+                Deactive patients: {deactivePatients}
+              </div>
+            </div>
+          </div>
+
+          {/* Top Toolbar Header */}
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-5">
+            <div className="shrink-0">
+              <h2 className="text-lg font-bold text-gray-900">Patient Management</h2>
+              <p className="mt-0.5 text-sm text-gray-500">Manage patient registration, records and information.</p>
+            </div>
+
+            {/* Fluid Centered Search Field */}
+            <div className="w-full md:flex-1 md:max-w-md md:mx-auto">
+              <Input
+                label=""
+                type="search"
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                placeholder="Search patient name, ID or phone..."
+                className="w-full"
+              />
+            </div>
+
+            {/* Action Button */}
+            <div className="shrink-0">
+              {canCreate && (
+                <Button
+                  variant="primary"
+                  onClick={() => navigate("/patients/register")}
+                  className="whitespace-nowrap"
+                >
+                  Add Patient
+                </Button>
+              )}
+            </div>
+          </div>
+
+          {error && <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</div>}
+
+          {/* Main Content Area */}
+          <div className="w-full flex-1 flex flex-col justify-between">
+            <Table
+              columns={columns}
+              data={paginatedPatients}
+              loading={loading}
+              emptyMessage="No patients found."
+            />
+
+            {/* Static Bottom Pagination Controls */}
+            {!loading && (
+              <div className="sticky bottom-0 z-10 border-t border-gray-200 bg-white px-4 py-3 sm:px-6 rounded-b-xl border shadow-sm flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mt-3">
+                <div className="flex flex-1 items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-700">
+                      Showing <span className="font-medium">{filteredPatients.length > 0 ? (page - 1) * itemsPerPage + 1 : 0}</span> to <span className="font-medium">{Math.min(page * itemsPerPage, filteredPatients.length)}</span> of <span className="font-medium">{filteredPatients.length}</span> patients
+                    </p>
+                  </div>
+                  <div>
+                    <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+                      <button
+                        onClick={() => setPage((p) => Math.max(1, p - 1))}
+                        disabled={page === 1}
+                        className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50 cursor-pointer"
+                      >
+                        <span className="sr-only">Previous</span>
+                        <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                          <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" />
+                        </svg>
+                      </button>
+                      <span className="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 focus:z-20 focus:outline-offset-0">
+                        Page {page} of {totalPages}
+                      </span>
+                      <button
+                        onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                        disabled={page === totalPages || totalPages === 0}
+                        className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50 cursor-pointer"
+                      >
+                        <span className="sr-only">Next</span>
+                        <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                          <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
+                        </svg>
+                      </button>
+                    </nav>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+        </div>
+      </div>
+    </BaseLayout>
+  );
 }
