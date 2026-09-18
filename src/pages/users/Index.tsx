@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { EllipsisVerticalIcon } from "@heroicons/react/24/outline";
+import { EllipsisVerticalIcon, UserGroupIcon, CheckCircleIcon, XCircleIcon } from "@heroicons/react/24/outline";
 import BaseLayout from "../../components/layouts/BaseLayout";
 import Dropdown from "../../components/atoms/ui/Dropdown";
-import Modal from "../../components/atoms/ui/Modal";
 import Button from "../../components/atoms/ui/Button";
 import Input from "../../components/atoms/forms/Input";
 import { userAPI, type User } from "../../services/userAPI";
@@ -18,9 +17,6 @@ export default function UsersIndex() {
   const { user } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [search, setSearch] = useState("");
-  const [selected, setSelected] = useState<User | null>(null);
-  const [editOpen, setEditOpen] = useState(false);
-  const [viewOpen, setViewOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -38,10 +34,14 @@ export default function UsersIndex() {
       .finally(() => setLoading(false));
   }, []);
 
+  const totalCount = users.length;
+  const activeCount = users.filter((u) => (u.status ? u.status.toUpperCase() === "ACTIVE" : !u.isDeleted)).length;
+  const inactiveCount = users.filter((u) => (u.status ? u.status.toUpperCase() === "INACTIVE" || u.status.toUpperCase() === "DEACTIVE" : !!u.isDeleted)).length;
+
   const filtered = users.filter((u) => {
     const s = search.trim().toLowerCase();
     if (!s) return true;
-    return [u.id, u.firstName, u.secondName || "", u.lastName, u.email, u.role].some((v) => v.toLowerCase().includes(s));
+    return [u.id, u.firstName, u.secondName || "", u.lastName, u.email, u.role, u.status || (u.isDeleted ? "inactive" : "active")].some((v) => v.toLowerCase().includes(s));
   });
 
   const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
@@ -51,15 +51,6 @@ export default function UsersIndex() {
   useEffect(() => {
     setPage(1);
   }, [search]);
-
-  function openView(u: User) {
-    setSelected(u);
-    setViewOpen(true);
-  }
-  function openEdit(u: User) {
-    setSelected(u);
-    setEditOpen(true);
-  }
 
   async function handleDelete(u: User) {
     const result = await Swal.fire({
@@ -86,25 +77,6 @@ export default function UsersIndex() {
       });
   }
 
-  async function handleSave(updated: User) {
-    try {
-      const saved = await userAPI.update(updated.id, updated);
-      setUsers((current) => current.map((u) => (u.id === saved.id ? saved : u)));
-      setEditOpen(false);
-      Swal.fire({
-        title: 'Success!',
-        text: 'User updated successfully.',
-        icon: 'success',
-        timer: 1500,
-        showConfirmButton: false
-      });
-    } catch (requestError: unknown) {
-      const msg = requestError instanceof Error ? requestError.message : "Failed to update user";
-      setError(msg);
-      Swal.fire('Error', msg, 'error');
-    }
-  }
-
   interface DropdownItem {
     label: string;
     onClick: () => void;
@@ -112,9 +84,9 @@ export default function UsersIndex() {
   }
 
   const getUserActions = (u: User): DropdownItem[] => {
-    const actions: DropdownItem[] = [{ label: 'View', onClick: () => openView(u) }];
+    const actions: DropdownItem[] = [{ label: 'View', onClick: () => navigate(`/users/${u.id}`) }];
     if (canUpdate) {
-      actions.push({ label: 'Edit', onClick: () => openEdit(u) });
+      actions.push({ label: 'Edit', onClick: () => navigate(`/users/${u.id}/edit`) });
     }
     if (canDelete) {
       actions.push({ label: 'Delete', onClick: () => handleDelete(u), className: 'text-red-600 hover:bg-red-50' });
@@ -150,17 +122,20 @@ export default function UsersIndex() {
     {
       key: "status",
       title: "Status",
-      render: (val: string) => (
-        <span
-          className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
-            val === "ACTIVE" || !val
-              ? "bg-green-100 text-green-700"
-              : "bg-red-100 text-red-700"
-          }`}
-        >
-          {val || "ACTIVE"}
-        </span>
-      ),
+      render: (_: any, u: User) => {
+        const isActive = u.status === "ACTIVE" || (!u.status && !u.isDeleted);
+        return (
+          <span
+            className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
+              isActive
+                ? "bg-green-100 text-green-700"
+                : "bg-red-100 text-red-700"
+            }`}
+          >
+            {isActive ? "ACTIVE" : "INACTIVE"}
+          </span>
+        );
+      },
     },
     {
       key: "actions",
@@ -212,6 +187,45 @@ export default function UsersIndex() {
                   Add user
                 </Button>
               )}
+            </div>
+          </div>
+
+          {/* Top Summary Cards (Static) */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 mb-6">
+            {/* Total Users */}
+            <div className="rounded-2xl bg-white p-5 shadow-sm border border-gray-100 flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">Total Users</p>
+                <h3 className="mt-1 text-2xl font-bold text-gray-900">{loading ? "..." : totalCount}</h3>
+                <p className="mt-0.5 text-xs text-gray-500">System registered accounts</p>
+              </div>
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                <UserGroupIcon className="h-6 w-6" />
+              </div>
+            </div>
+
+            {/* Active Users */}
+            <div className="rounded-2xl bg-white p-5 shadow-sm border border-gray-100 flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">Active Users</p>
+                <h3 className="mt-1 text-2xl font-bold text-green-600">{loading ? "..." : activeCount}</h3>
+                <p className="mt-0.5 text-xs text-gray-500">Authorized & active accounts</p>
+              </div>
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-green-50 text-green-600">
+                <CheckCircleIcon className="h-6 w-6" />
+              </div>
+            </div>
+
+            {/* Inactive Users */}
+            <div className="rounded-2xl bg-white p-5 shadow-sm border border-gray-100 flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">Inactive Users</p>
+                <h3 className="mt-1 text-2xl font-bold text-red-600">{loading ? "..." : inactiveCount}</h3>
+                <p className="mt-0.5 text-xs text-gray-500">Deactivated / suspended accounts</p>
+              </div>
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-red-50 text-red-600">
+                <XCircleIcon className="h-6 w-6" />
+              </div>
             </div>
           </div>
 
@@ -268,55 +282,6 @@ export default function UsersIndex() {
           </div>
         </div>
       </div>
-
-      {/* View modal */}
-      <Modal isOpen={viewOpen} onClose={() => setViewOpen(false)} title={selected ? `${selected.firstName} ${selected.secondName ? `${selected.secondName} ` : ''}${selected.lastName}` : undefined} size="md">
-        {selected && (
-          <div className="space-y-2">
-            <p className="text-sm text-gray-600">Email: <span className="font-medium text-gray-900">{selected.email}</span></p>
-            {selected.phoneNumber && <p className="text-sm text-gray-600">Phone: <span className="font-medium text-gray-900">{selected.phoneNumber}</span></p>}
-            <p className="text-sm text-gray-600">Role: <span className="font-medium text-gray-900">{selected.role}</span></p>
-            <p className="text-sm text-gray-600">Status: <span className="font-medium text-gray-900">{selected.status || "ACTIVE"}</span></p>
-            <div className="flex justify-end gap-3 mt-6">
-              <Button variant="secondary" onClick={() => setViewOpen(false)}>Close</Button>
-              {canUpdate && <Button onClick={() => { setViewOpen(false); openEdit(selected); }}>Edit</Button>}
-            </div>
-          </div>
-        )}
-      </Modal>
-
-      {/* Edit modal */}
-      <Modal isOpen={editOpen} onClose={() => setEditOpen(false)} title="Edit user" size="lg">
-        {selected && <EditUserForm user={selected} onCancel={() => setEditOpen(false)} onSave={handleSave} />}
-      </Modal>
     </BaseLayout>
-  );
-}
-
-function EditUserForm({ user, onCancel, onSave }: { user: User; onCancel: () => void; onSave: (u: User) => void }) {
-  const [form, setForm] = useState<User>(user);
-  return (
-    <form onSubmit={(e) => { e.preventDefault(); onSave(form); }} className="grid grid-cols-1 gap-4 md:grid-cols-2">
-      <Input label="First name" value={form.firstName} onChange={(e) => setForm({ ...form, firstName: e.target.value })} required />
-      <Input label="Second name" value={form.secondName || ""} onChange={(e) => setForm({ ...form, secondName: e.target.value })} />
-      <Input label="Last name" value={form.lastName} onChange={(e) => setForm({ ...form, lastName: e.target.value })} required />
-      <Input label="Email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required />
-      <Input label="Phone number" type="tel" value={form.phoneNumber || ""} onChange={(e) => setForm({ ...form, phoneNumber: e.target.value })} />
-      <label className="text-sm font-medium text-gray-700">Role
-        <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20">
-          {['Admin', 'Doctor', 'Nurse', 'Receptionist', 'Pharmacist', 'LabTechnician', 'Cashier', 'ClinicManager', 'Accountant', 'Patient'].map(r => <option key={r} value={r}>{r}</option>)}
-        </select>
-      </label>
-      <label className="text-sm font-medium text-gray-700">Status
-        <select value={form.status || "ACTIVE"} onChange={(e) => setForm({ ...form, status: e.target.value as any })} className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20">
-          <option value="ACTIVE">ACTIVE</option>
-          <option value="INACTIVE">INACTIVE</option>
-        </select>
-      </label>
-      <div className="md:col-span-2 flex justify-end gap-3 mt-3">
-        <Button variant="secondary" onClick={onCancel}>Cancel</Button>
-        <Button type="submit">Save</Button>
-      </div>
-    </form>
   );
 }

@@ -7,7 +7,7 @@
  * Some endpoints may instead return a bare array or a { data: [...] } wrapper.
  */
 
-interface ApiResponse<T = unknown> {
+export interface ApiResponse<T = unknown> {
     data?: T;
     links?: Record<string, unknown>;
     meta?: {
@@ -21,7 +21,7 @@ interface ApiResponse<T = unknown> {
     };
 }
 
-interface AxiosResponse<T = unknown> {
+export interface AxiosResponse<T = unknown> {
     data?: T;
 }
 
@@ -31,20 +31,27 @@ interface AxiosResponse<T = unknown> {
  * @param {AxiosResponse} response - Axios response object.
  * @returns {Array} The list of records (empty array if none found).
  */
-export function extractList<T = unknown>(response: AxiosResponse<ApiResponse<T> | T[]>): T[] {
+export function extractList<T = unknown>(response?: AxiosResponse<ApiResponse<T> | T[] | Record<string, unknown>> | null): T[] {
     let raw = response?.data;
-    if (Array.isArray(raw)) return raw;
-    if (raw && typeof raw === "object") {
+    if (!raw) return [];
+    if (Array.isArray(raw)) return raw as T[];
+    if (typeof raw === "object") {
         const typedRaw = raw as ApiResponse<T>;
-        if (Array.isArray(typedRaw.data)) return typedRaw.data;
+        if (Array.isArray(typedRaw.data)) return typedRaw.data as T[];
         // Unwrap the outer { data: {...} } envelope Laravel adds around collections.
         if (typedRaw.data && typeof typedRaw.data === "object" && !Array.isArray(typedRaw.data)) {
             const nestedData = typedRaw.data as Record<string, unknown>;
             const key = Object.keys(nestedData).find(
                 (k) => k !== "links" && k !== "meta" && Array.isArray(nestedData[k]),
             );
-            if (key) return nestedData[key] as T[];
+            if (key) return (nestedData[key] as T[]) || [];
         }
+        // Check top-level resource key in raw (e.g. { users: [...], links: ..., meta: ... })
+        const rawObj = raw as Record<string, unknown>;
+        const key = Object.keys(rawObj).find(
+            (k) => k !== "links" && k !== "meta" && Array.isArray(rawObj[k]),
+        );
+        if (key) return (rawObj[key] as T[]) || [];
     }
     return [];
 }
@@ -56,15 +63,18 @@ export function extractList<T = unknown>(response: AxiosResponse<ApiResponse<T> 
  * @param {number} [fallbackCount=0] - Item count to use when no meta is present.
  * @returns {{ totalPages: number, totalItems: number }}
  */
-export function extractMeta(response: AxiosResponse<ApiResponse | unknown[]>, fallbackCount: number = 0): {
+export function extractMeta(response?: AxiosResponse<ApiResponse | unknown[] | Record<string, unknown>> | null, fallbackCount: number = 0): {
     totalPages: number;
     totalItems: number;
 } {
     let raw = response?.data;
-    if (raw && typeof raw === "object") {
+    if (raw && typeof raw === "object" && !Array.isArray(raw)) {
         const typedRaw = raw as ApiResponse;
         if (typedRaw.data && typeof typedRaw.data === "object" && !Array.isArray(typedRaw.data)) {
-            raw = typedRaw.data;
+            const nestedData = typedRaw.data as ApiResponse;
+            if (nestedData.meta) {
+                raw = nestedData;
+            }
         }
     }
     const meta = (raw as ApiResponse)?.meta;
@@ -84,12 +94,16 @@ export function extractMeta(response: AxiosResponse<ApiResponse | unknown[]>, fa
  * @param {AxiosResponse} response - Axios response object.
  * @returns {Object|null}
  */
-export function extractRecord<T = unknown>(response: AxiosResponse<ApiResponse<T> | T[]>): T | null {
+export function extractRecord<T = unknown>(response?: AxiosResponse<ApiResponse<T> | T | T[]> | null): T | null {
     const raw = response?.data;
-    if (Array.isArray(raw)) return raw[0] ?? null;
-    if (raw && typeof raw === "object") {
+    if (raw == null) return null;
+    if (Array.isArray(raw)) return (raw[0] as T) ?? null;
+    if (typeof raw === "object") {
         const typedRaw = raw as ApiResponse<T>;
-        return (typedRaw.data as T) ?? (raw as T);
+        if ("data" in typedRaw && typedRaw.data !== undefined) {
+            return (typedRaw.data as T) ?? null;
+        }
+        return raw as T;
     }
-    return raw ?? null;
+    return null;
 }
