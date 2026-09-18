@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import BaseLayout from "../../components/layouts/BaseLayout";
 import StepWizard from "./StepWizard";
 import type { VitalsFormInput } from "./types";
+import { sanitizeNumericInput } from "../../utils/inputValidation";
 
 interface FieldConfig {
   key: keyof Omit<VitalsFormInput, "patient_id">;
@@ -292,7 +293,7 @@ export default function VitalsForm() {
                             type="number"
                             step={stepAttr ?? "1"}
                             value={values[key] ?? ""}
-                            onChange={(e) => handleChange(key, e.target.value)}
+                            onChange={(e) => handleChange(key, sanitizeNumericInput(e.target.value, stepAttr === "0.1"))}
                             className={`w-full rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500/30 ${
                               errors[key]
                                 ? "border-red-400"

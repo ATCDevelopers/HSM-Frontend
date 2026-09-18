@@ -1,3 +1,5 @@
+import { sanitizeNumericInput } from "../../../utils/inputValidation";
+
 /**
  * Input Component - A versatile form input component with validation support
  *
@@ -119,7 +121,12 @@ function Input({
                 type={type}
                 placeholder={placeholder}
                 value={value}
-                onChange={onChange}
+                onChange={(event) => {
+                    if (type === "number") {
+                        event.target.value = sanitizeNumericInput(event.target.value, props.step !== undefined && props.step !== "1");
+                    }
+                    onChange?.(event);
+                }}
                 disabled={disabled}
                 required={required}
                 className={inputClasses}

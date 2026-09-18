@@ -33,6 +33,15 @@ const MedicalRecordsShow = lazy(() => import("../pages/medical-records/Show"));
 const ConsultationForm = lazy(
   () => import("../pages/medical-records/ConsultationForm"),
 );
+const LaboratoryIndex = lazy(
+  () => import("../pages/laboratory/Labtest_management"),
+);
+const AddLabTest = lazy(() => import("../pages/laboratory/AddLabtest"));
+const EditLabTest = lazy(() => import("../pages/laboratory/EditLabtest"));
+const LabResults = lazy(() => import("../pages/laboratory/LabResults"));
+const LabTestDetails = lazy(
+  () => import("../pages/laboratory/LabtestDetails"),
+);
 
 const ResourceIndex = Index as ComponentType<{ resource: string }>;
 const ResourceShow = Show as ComponentType<{ resource: string }>;
@@ -87,6 +96,13 @@ function AppRoutes() {
             path="/medical-records/consultations/new"
             element={<ConsultationForm />}
           />
+
+          <Route path="/laboratory" element={<LaboratoryIndex />} />
+          <Route path="/laboratory/add" element={<AddLabTest />} />
+          <Route path="/laboratory/:id/edit" element={<EditLabTest />} />
+          <Route path="/laboratory/:id/results" element={<LabResults />} />
+          <Route path="/laboratory/details" element={<LabTestDetails />} />
+          <Route path="/laboratory/:id" element={<LabTestDetails />} />
         </Route>
       </Routes>
     </Suspense>
