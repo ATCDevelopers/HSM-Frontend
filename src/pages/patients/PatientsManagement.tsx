@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { EllipsisVerticalIcon } from "@heroicons/react/24/outline";
+import { EllipsisVerticalIcon, UserGroupIcon, CheckCircleIcon, XCircleIcon } from "@heroicons/react/24/outline";
 import BaseLayout from "../../components/layouts/BaseLayout.tsx";
 import Dropdown from "../../components/atoms/ui/Dropdown";
 import Button from "../../components/atoms/ui/Button";
@@ -32,6 +32,10 @@ export default function PatientManagement() {
       .catch((requestError: unknown) => setError(requestError instanceof Error ? requestError.message : "Failed to load patients"))
       .finally(() => setLoading(false));
   }, []);
+
+  const totalPatients = patients.length;
+  const activePatients = patients.filter((patient) => (patient.status ? patient.status.toUpperCase() === "ACTIVE" : true)).length;
+  const inactivePatients = patients.filter((patient) => patient.status && (patient.status.toUpperCase() === "DEACTIVE" || patient.status.toUpperCase() === "INACTIVE")).length;
 
   const filteredPatients = patients.filter((patient) => {
     const search = searchTerm.trim().toLowerCase();
@@ -74,9 +78,6 @@ export default function PatientManagement() {
       Swal.fire("Error!", msg, "error");
     }
   };
-
-  const activePatients = patients.filter((patient) => (patient.status || "ACTIVE") === "ACTIVE").length;
-  const deactivePatients = patients.filter((patient) => patient.status === "DEACTIVE").length;
 
   interface DropdownItem {
     label: string;
@@ -166,21 +167,6 @@ export default function PatientManagement() {
     <BaseLayout resourceName="Patients">
       <div className="w-full rounded-2xl bg-blue-50 p-6 min-h-[calc(100vh-6rem)] flex flex-col justify-between">
         <div className="mx-auto max-w-6xl w-full flex-1 flex flex-col">
-          {/* Sticky Top Stats Summary Card */}
-          <div className="sticky top-0 z-20 mb-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-              <div className="rounded-xl bg-blue-100 p-3 text-center text-sm font-semibold text-blue-800">
-                Total patients: {patients.length}
-              </div>
-              <div className="rounded-xl bg-green-100 p-3 text-center text-sm font-semibold text-green-800">
-                Active patients: {activePatients}
-              </div>
-              <div className="rounded-xl bg-red-100 p-3 text-center text-sm font-semibold text-red-800">
-                Deactive patients: {deactivePatients}
-              </div>
-            </div>
-          </div>
-
           {/* Top Toolbar Header */}
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-5">
             <div className="shrink-0">
@@ -211,6 +197,45 @@ export default function PatientManagement() {
                   Add Patient
                 </Button>
               )}
+            </div>
+          </div>
+
+          {/* Top Summary Cards (Static) */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 mb-6">
+            {/* Total Patients */}
+            <div className="rounded-2xl bg-white p-5 shadow-sm border border-gray-100 flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">Total Patients</p>
+                <h3 className="mt-1 text-2xl font-bold text-gray-900">{loading ? "..." : totalPatients}</h3>
+                <p className="mt-0.5 text-xs text-gray-500">Registered patient records</p>
+              </div>
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                <UserGroupIcon className="h-6 w-6" />
+              </div>
+            </div>
+
+            {/* Active Patients */}
+            <div className="rounded-2xl bg-white p-5 shadow-sm border border-gray-100 flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">Active Patients</p>
+                <h3 className="mt-1 text-2xl font-bold text-green-600">{loading ? "..." : activePatients}</h3>
+                <p className="mt-0.5 text-xs text-gray-500">Active medical profiles</p>
+              </div>
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-green-50 text-green-600">
+                <CheckCircleIcon className="h-6 w-6" />
+              </div>
+            </div>
+
+            {/* Inactive Patients */}
+            <div className="rounded-2xl bg-white p-5 shadow-sm border border-gray-100 flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">Inactive Patients</p>
+                <h3 className="mt-1 text-2xl font-bold text-red-600">{loading ? "..." : inactivePatients}</h3>
+                <p className="mt-0.5 text-xs text-gray-500">Deactivated patient records</p>
+              </div>
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-red-50 text-red-600">
+                <XCircleIcon className="h-6 w-6" />
+              </div>
             </div>
           </div>
 
