@@ -1,79 +1,25 @@
-/**
- * List Component - A versatile list component with multiple variants and sizes
- *
- * This component provides a flexible list interface for displaying collections
- * of items with consistent styling and interaction patterns. Features multiple
- * visual variants, size options, and click handling. Perfect for data lists,
- * navigation menus, search results, and any item collection requirements.
- *
- * Common use cases:
- * - Search results and data listings
- * - Navigation menus and sidebars
- * - User lists and contact directories
- * - Product catalogs and item galleries
- * - Notification lists and activity feeds
- * - Settings and configuration lists
- *
- * @param {Array} items - Array of item objects with title, description, subtitle, badge, and action properties
- * @param {Function} onItemClick - Function called when item is clicked: (item, index) => {}
- * @param {string} className - Additional CSS classes for the list container
- * @param {string} variant - List style variant: "default", "bordered", "card"
- * @param {string} size - List item size: "sm", "md", "lg"
- * @param {string} emptyMessage - Message to display when list is empty
- * @param {...any} props - Additional container attributes to spread
- *
- * @example
- * // Basic list with search results
- * <List
- *   items={[
- *     { title: "Example item", description: "Description", subtitle: "Status" }
- *   ]}
- *   onItemClick={handleUserClick}
- *   variant="default"
- * />
- *
- * @example
- * // Card-style list with actions
- * <List
- *   items={[
- *     {
- *       title: "Project Alpha",
- *       description: "Web application development",
- *       badge: "In Progress",
- *       action: <Button size="sm">View</Button>
- *     },
- *     {
- *       title: "Project Beta",
- *       description: "Mobile app redesign",
- *       badge: "Completed",
- *       action: <Button size="sm">View</Button>
- *     }
- *   ]}
- *   variant="card"
- *   onItemClick={handleProjectClick}
- * />
- *
- * @example
- * // Navigation list
- * <List
- *   items={[
- *     { title: "Dashboard", description: "Overview and analytics" },
- *     { title: "Users", description: "User management" },
- *     { title: "Settings", description: "Application settings" }
- *   ]}
- *   onItemClick={handleNavigation}
- *   size="sm"
- *   variant="bordered"
- * />
- *
- * @example
- * // Empty state
- * <List
- *   items={[]}
- *   emptyMessage="No users found matching your search"
- *   className="min-h-[200px]"
- * />
- */
+import React from "react";
+
+export interface ListItem {
+    id?: string | number;
+    title?: React.ReactNode;
+    description?: React.ReactNode;
+    subtitle?: React.ReactNode;
+    badge?: React.ReactNode;
+    action?: React.ReactNode;
+    [key: string]: any;
+}
+
+export interface ListProps {
+    items?: ListItem[];
+    onItemClick?: (item: ListItem, index: number) => void;
+    className?: string;
+    variant?: "default" | "bordered" | "card";
+    size?: "sm" | "md" | "lg";
+    emptyMessage?: string;
+    [key: string]: any;
+}
+
 function List({
                   items = [],
                   onItemClick,
@@ -82,33 +28,33 @@ function List({
                   size = "md",
                   emptyMessage = "No items to display",
                   ...props
-              }) {
+              }: ListProps) {
     // Size variations for different list item heights and text sizes
     const sizeClasses = {
-        sm: "text-sm py-2 px-3",
-        md: "text-base py-3 px-4",
-        lg: "text-lg py-4 px-5",
+        sm: "text-xs sm:text-sm py-2 px-3",
+        md: "text-xs sm:text-base py-2.5 sm:py-3 px-3 sm:px-4",
+        lg: "text-sm sm:text-lg py-3 sm:py-4 px-3.5 sm:px-5",
     };
 
     // Visual style variants for different list appearances
     const variantClasses = {
         default: "border-b border-gray-200 last:border-b-0",
-        bordered: "border border-gray-200 rounded-lg mb-2",
-        card: "bg-white border border-gray-200 rounded-lg shadow-sm mb-2 hover:shadow-md transition-shadow",
+        bordered: "border border-gray-200 rounded-xl mb-2",
+        card: "bg-white border border-gray-200 rounded-xl shadow-xs mb-2 hover:shadow-md transition-shadow",
     };
 
     // Handle empty state with custom message
     if (!items || items.length === 0) {
         return (
             <div className={`text-center py-8 text-gray-500 ${className}`}>
-                <p>{emptyMessage}</p>
+                <p className="text-xs sm:text-sm">{emptyMessage}</p>
             </div>
         );
     }
 
     return (
         // Main list container
-        <div className={`w-full ${className}`} {...props}>
+        <div className={`w-full min-w-0 ${className}`} {...props}>
             {items.map((item, index) => (
                 // Individual list item with dynamic styling
                 <div
@@ -116,40 +62,49 @@ function List({
                     className={`
             ${sizeClasses[size]}
             ${variantClasses[variant]}
-            ${onItemClick ? "cursor-pointer hover:bg-gray-50" : ""}
-            ${variant === "card" ? "flex items-center justify-between" : ""}
+            ${onItemClick ? "cursor-pointer hover:bg-gray-50/80" : ""}
+            ${variant === "card" ? "flex flex-col sm:flex-row sm:items-center justify-between gap-3" : ""}
             transition-colors
           `}
                     onClick={() => onItemClick && onItemClick(item, index)}
                 >
                     {/* Main content area */}
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0 break-words">
                         {/* Item title */}
-                        {item.title &&
-                            <h3 className="font-medium text-gray-900">{item.title}</h3>}
+                        {item.title && (
+                            <h3 className="font-semibold text-gray-900 text-sm sm:text-base truncate sm:whitespace-normal">
+                                {item.title}
+                            </h3>
+                        )}
 
                         {/* Item description */}
                         {item.description && (
-                            <p className="text-gray-600 mt-1">{item.description}</p>
+                            <p className="text-gray-600 mt-1 text-xs sm:text-sm leading-relaxed">
+                                {item.description}
+                            </p>
                         )}
 
                         {/* Item subtitle */}
                         {item.subtitle && (
-                            <p className="text-sm text-gray-500 mt-1">{item.subtitle}</p>
+                            <p className="text-xs text-gray-400 mt-1">
+                                {item.subtitle}
+                            </p>
                         )}
 
-                        {/* Item badge - TODO: Refactor to use Badge component */}
+                        {/* Item badge */}
                         {item.badge && (
-                            <span
-                                className="inline-block mt-2 px-2 py-1 text-xs font-medium bg-blue-100 text-blue-700 rounded">
-								{item.badge}
-							</span>
+                            <span className="inline-block mt-2 px-2 py-0.5 text-[11px] font-semibold bg-blue-50 text-blue-700 rounded-md border border-blue-200/60">
+                                {item.badge}
+                            </span>
                         )}
                     </div>
 
                     {/* Action area for card variant */}
-                    {variant === "card" && item.action &&
-                        <div className="ml-4">{item.action}</div>}
+                    {variant === "card" && item.action && (
+                        <div className="shrink-0 flex items-center gap-2 self-end sm:self-center">
+                            {item.action}
+                        </div>
+                    )}
                 </div>
             ))}
         </div>

@@ -165,17 +165,17 @@ export default function PatientManagement() {
 
   return (
     <BaseLayout resourceName="Patients">
-      <div className="w-full rounded-2xl bg-blue-50 p-6 min-h-[calc(100vh-6rem)] flex flex-col justify-between">
+      <div className="w-full rounded-2xl bg-blue-50 p-3.5 sm:p-6 min-h-[calc(100vh-6rem)] flex flex-col justify-between">
         <div className="mx-auto max-w-6xl w-full flex-1 flex flex-col">
           {/* Top Toolbar Header */}
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-5">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4 mb-5">
             <div className="shrink-0">
               <h2 className="text-lg font-bold text-gray-900">Patient Management</h2>
-              <p className="mt-0.5 text-sm text-gray-500">Manage patient registration, records and information.</p>
+              <p className="mt-0.5 text-xs sm:text-sm text-gray-500">Manage patient registration, records and information.</p>
             </div>
 
             {/* Fluid Centered Search Field */}
-            <div className="w-full md:flex-1 md:max-w-md md:mx-auto">
+            <div className="w-full sm:flex-1 sm:max-w-md sm:mx-auto">
               <Input
                 label=""
                 type="search"
@@ -192,7 +192,7 @@ export default function PatientManagement() {
                 <Button
                   variant="primary"
                   onClick={() => navigate("/patients/register")}
-                  className="whitespace-nowrap"
+                  className="w-full sm:w-auto justify-center"
                 >
                   Add Patient
                 </Button>

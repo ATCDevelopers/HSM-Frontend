@@ -1,36 +1,21 @@
+import React from "react";
 import {
     ChevronUpIcon,
     ChevronDownIcon,
     InboxIcon
 } from "@heroicons/react/24/outline";
 
-/**
- * Table Component - A reusable data table with sorting, variants, and loading states
- *
- * @param {Array} columns - Array of column definitions with key, title, render function, etc.
- * @param {Array} data - Array of data objects to display in rows
- * @param {Function} onRowClick - Optional callback when a row is clicked (row, index) => {}
- * @param {Function} onSort - Optional callback for column sorting (columnKey, direction) => {}
- * @param {string} sortColumn - Current sort column key
- * @param {string} sortDirection - Current sort direction ("asc" or "desc")
- * @param {string} className - Additional CSS classes
- * @param {string} variant - Table style: "default", "dark"
- * @param {string} size - Table cell size: "sm", "md", "lg"
- * @param {string} emptyMessage - Message to show when no data
- * @param {boolean} loading - Show loading spinner when true
- */
-
 // Shared card wrapper component for consistent styling
-function TableCard({children, container, className, ...props}) {
+function TableCard({children, container, className, ...props}: {children: React.ReactNode; container?: string; className?: string; [key: string]: any}) {
     return (
         <div
-            className={`w-full overflow-hidden rounded-xl ${container} ${className}`} {...props}>
+            className={`w-full min-w-0 max-w-full overflow-hidden rounded-xl ${container || ""} ${className || ""}`} {...props}>
             {children}
         </div>
     );
 }
 
-interface TableColumn {
+export interface TableColumn {
     key: string;
     title?: string;
     sortable?: boolean;
@@ -38,7 +23,7 @@ interface TableColumn {
     render?: (value: any, row: any, index?: number) => React.ReactNode;
 }
 
-interface TableProps {
+export interface TableProps {
     columns?: TableColumn[];
     data?: any[];
     onRowClick?: (row: any, index?: number) => void;
@@ -69,42 +54,48 @@ function Table({
                    rowClassName = null,
                    ...props
                }: TableProps) {
-    // Cell padding / font size per density
+    // Cell padding / font size per density (fluid responsive for mobile)
     const sizeClasses = {
-        sm: "text-sm px-4 py-2.5",
-        md: "text-sm px-6 py-3.5",
-        lg: "text-base px-6 py-4",
+        sm: "text-xs sm:text-sm px-2.5 sm:px-4 py-2 sm:py-2.5",
+        md: "text-xs sm:text-sm px-3 sm:px-6 py-2.5 sm:py-3.5",
+        lg: "text-sm sm:text-base px-3.5 sm:px-6 py-3 sm:py-4",
     };
 
-    // Header padding per density
+    // Header padding per density (fluid responsive for mobile)
     const headerSizeClasses = {
-        sm: "px-4 py-2.5",
-        md: "px-6 py-3",
-        lg: "px-6 py-3.5",
+        sm: "px-2.5 sm:px-4 py-2 sm:py-2.5",
+        md: "px-3 sm:px-6 py-2.5 sm:py-3",
+        lg: "px-3.5 sm:px-6 py-3 sm:py-3.5",
     };
 
     // Theme tokens per variant
     const theme = {
         default: {
-            container: "border border-gray-200 bg-white shadow-sm",
-            header: "bg-gray-50/80 text-gray-500 border-b border-gray-200",
+            container: "border border-gray-200 bg-white shadow-xs",
+            header: "bg-gray-50/90 text-gray-500 border-b border-gray-200",
             body: "divide-y divide-gray-100",
-            row: "hover:bg-blue-50/70 hover:shadow-[inset_3px_0_0_0_theme(colors.blue.500)]",
+            row: "hover:bg-blue-50/60 hover:shadow-[inset_3px_0_0_0_theme(colors.blue.500)]",
             cell: "text-gray-700",
         },
         dark: {
-            container: "border border-gray-700 bg-gray-900 shadow-sm",
+            container: "border border-gray-700 bg-gray-900 shadow-xs",
             header: "bg-gray-800 text-gray-400 border-b border-gray-700",
             body: "divide-y divide-gray-800",
             row: "hover:bg-gray-800 hover:shadow-[inset_3px_0_0_0_theme(colors.blue.400)]",
             cell: "text-gray-200",
         },
-    }[variant] || {};
+    }[variant] || {
+        container: "border border-gray-200 bg-white shadow-xs",
+        header: "bg-gray-50/90 text-gray-500 border-b border-gray-200",
+        body: "divide-y divide-gray-100",
+        row: "hover:bg-blue-50/60",
+        cell: "text-gray-700",
+    };
 
     /**
      * Handle column sorting
      */
-    const handleSort = (column) => {
+    const handleSort = (column: TableColumn) => {
         if (onSort && column.sortable) {
             const newDirection =
                 sortColumn === column.key && sortDirection === "asc" ? "desc" : "asc";
@@ -115,7 +106,7 @@ function Table({
     /**
      * Render sort icon (up/down arrow) for sortable columns
      */
-    const renderSortIcon = (column) => {
+    const renderSortIcon = (column: TableColumn) => {
         if (!column.sortable || !onSort) return null;
         const isActive = sortColumn === column.key;
         const Icon = isActive && sortDirection === "desc" ? ChevronDownIcon : ChevronUpIcon;
@@ -159,14 +150,14 @@ function Table({
     }
 
     // Inject a serial-number column as the first column
-    const tableColumns = [
+    const tableColumns: TableColumn[] = [
         {
             key: "sn",
             title: "#",
             sortable: false,
-            className: "w-12",
+            className: "w-10 sm:w-12 text-center",
             render: (value, row, index) => (
-                <span className="tabular-nums text-gray-400">{index + 1}</span>
+                <span className="tabular-nums text-gray-400 text-xs">{(index ?? 0) + 1}</span>
             ),
         },
         ...columns,
@@ -174,8 +165,8 @@ function Table({
 
     return (
         <TableCard container={theme.container} className={className} {...props}>
-            <div className="overflow-x-auto">
-                <table className="w-full border-collapse text-left">
+            <div className="w-full min-w-0 max-w-full overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
+                <table className="w-full min-w-full border-collapse text-left">
                     {/* Header */}
                     <thead className={theme.header}>
                     <tr>
@@ -194,7 +185,7 @@ function Table({
                                     }
                                     className={`
 											${headerSizeClasses[size]}
-											text-[11px] font-semibold uppercase tracking-wider whitespace-nowrap select-none
+											text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider whitespace-nowrap select-none
 											${sortable ? "group cursor-pointer hover:text-gray-700" : ""}
 											${column.className || ""}
 										`}
@@ -229,7 +220,7 @@ function Table({
                                     className={`
 											${sizeClasses[size]}
 											${theme.cell}
-											align-middle
+											align-middle whitespace-nowrap sm:whitespace-normal
 											${column.className || ""}
 										`}
                                 >

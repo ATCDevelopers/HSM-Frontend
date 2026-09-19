@@ -130,16 +130,16 @@ export default function RegisterUser() {
 
   return (
     <BaseLayout resourceName="Register User">
-      <div className="w-full rounded-2xl bg-blue-50 p-6">
-        <div className="mx-auto w-full max-w-6xl px-4">
+      <div className="w-full rounded-2xl bg-blue-50 p-3.5 sm:p-6">
+        <div className="mx-auto w-full max-w-6xl px-0 sm:px-4">
           <button
             type="button"
             onClick={() => navigate("/users")}
-            className="mb-4 text-sm font-semibold text-blue-600 hover:text-blue-700"
+            className="mb-4 text-xs sm:text-sm font-semibold text-blue-600 hover:text-blue-700"
           >
             ← Back to Users
           </button>
-          <div className="w-full rounded-2xl bg-white p-8 shadow-sm">
+          <div className="w-full rounded-2xl bg-white p-4 sm:p-8 shadow-xs border border-gray-100">
             <h1 className="text-xl font-bold text-gray-900">Register New User</h1>
             <p className="mt-0.5 mb-6 text-sm text-gray-500">
               Create a system account with exact database schema fields.

@@ -119,16 +119,16 @@ export default function RegisterPatient() {
 
   return (
     <BaseLayout resourceName="Register Patient">
-      <div className="w-full rounded-2xl bg-blue-50 p-6">
+      <div className="w-full rounded-2xl bg-blue-50 p-3.5 sm:p-6">
         <div className="mx-auto w-full max-w-6xl">
           <button
             onClick={() => navigate("/patients")}
-            className="mb-4 text-sm font-semibold text-blue-600 hover:text-blue-700"
+            className="mb-4 text-xs sm:text-sm font-semibold text-blue-600 hover:text-blue-700"
           >
             ← Back to Patient Management
           </button>
 
-          <div className="w-full rounded-2xl bg-white p-8 shadow-sm">
+          <div className="w-full rounded-2xl bg-white p-4 sm:p-8 shadow-xs border border-gray-100">
             <h1 className="text-xl font-bold text-gray-900">
               Register New Patient
             </h1>

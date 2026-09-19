@@ -155,17 +155,17 @@ export default function UsersIndex() {
 
   return (
     <BaseLayout resourceName="Users">
-      <div className="w-full rounded-2xl bg-blue-50 p-6 min-h-[calc(100vh-6rem)] flex flex-col justify-between">
+      <div className="w-full rounded-2xl bg-blue-50 p-3.5 sm:p-6 min-h-[calc(100vh-6rem)] flex flex-col justify-between">
         <div className="mx-auto max-w-6xl w-full flex-1 flex flex-col">
           {/* Top Toolbar Header */}
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-5">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4 mb-5">
             <div className="shrink-0">
               <h2 className="text-lg font-bold text-gray-900">Users</h2>
-              <p className="mt-0.5 text-sm text-gray-500">Manage system users, roles and portals.</p>
+              <p className="mt-0.5 text-xs sm:text-sm text-gray-500">Manage system users, roles and portals.</p>
             </div>
 
             {/* Fluid Centered Search Field */}
-            <div className="w-full md:flex-1 md:max-w-md md:mx-auto">
+            <div className="w-full sm:flex-1 sm:max-w-md sm:mx-auto">
               <Input
                 label=""
                 type="search"
@@ -182,7 +182,7 @@ export default function UsersIndex() {
                 <Button
                   variant="primary"
                   onClick={() => navigate('/users/register')}
-                  className="whitespace-nowrap"
+                  className="w-full sm:w-auto justify-center"
                 >
                   Add user
                 </Button>

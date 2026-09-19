@@ -1,79 +1,11 @@
-/**
- * Input Component - A versatile form input component with validation support
- *
- * This component provides a consistent input interface throughout the application
- * with support for labels, error states, required indicators, and accessibility features.
- * Perfect for forms, search fields, and any text input requirements.
- *
- * Common use cases:
- * - Form inputs (name, email, password, search)
- * - Text fields for user input and data entry
- * - Search bars and filter inputs
- * - Numeric inputs and validation fields
- * - Password fields and secure inputs
- *
- * @param {string} label - Label text displayed above the input field
- * @param {string} type - Input type: "text", "email", "password", "number", "tel", "url", etc.
- * @param {string} placeholder - Placeholder text displayed when input is empty
- * @param {string} value - Current input value
- * @param {Function} onChange - Function called when input value changes: (event) => {}
- * @param {string} error - Error message to display (shows red border and error text)
- * @param {boolean} disabled - Whether the input is disabled
- * @param {boolean} required - Whether the input is required for form validation
- * @param {string} className - Additional CSS classes for the input element
- * @param {...any} props - Additional input attributes to spread
- *
- * @example
- * // Basic text input
- * <Input
- *   label="Full Name"
- *   value={name}
- *   onChange={(e) => setName(e.target.value)}
- *   placeholder="Enter your full name"
- *   required
- * />
- *
- * @example
- * // Email input with validation
- * <Input
- *   label="Email Address"
- *   type="email"
- *   value={email}
- *   onChange={(e) => setEmail(e.target.value)}
- *   placeholder="your@email.com"
- *   error={errors.email}
- *   required
- * />
- *
- * @example
- * // Password input
- * <Input
- *   label="Password"
- *   type="password"
- *   value={password}
- *   onChange={(e) => setPassword(e.target.value)}
- *   placeholder="Enter password"
- *   required
- * />
- *
- * @example
- * // Disabled input
- * <Input
- *   label="User ID"
- *   value={userId}
- *   disabled
- *   placeholder="Auto-generated"
- * />
- *
- * @example
- * // Search input
- * <Input
- *   type="search"
- *   placeholder="Search users..."
- *   value={searchTerm}
- *   onChange={(e) => setSearchTerm(e.target.value)}
- * />
- */
+import React from "react";
+
+export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+    label?: string;
+    error?: string;
+    className?: string;
+}
+
 function Input({
                    label = "",
                    type = "text",
@@ -85,36 +17,25 @@ function Input({
                    required = false,
                    className = "",
                    ...props
-               }) {
-    // Dynamic input styling based on state and validation
+               }: InputProps) {
     const inputClasses = [
-        // Base input styling with focus states
-        "w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500",
-
-        // State-based styling
-        disabled ? "bg-gray-100 cursor-not-allowed" : "bg-white",
-
-        // Error state styling
-        error ? "border-red-500 focus:ring-red-500 focus:border-red-500" : "",
-
-        // Custom additional classes
+        "w-full min-w-0 px-3 py-2.5 sm:py-2 text-sm text-gray-900 border border-gray-300 rounded-lg shadow-2xs focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all",
+        disabled ? "bg-gray-100/80 cursor-not-allowed text-gray-500" : "bg-white",
+        error ? "border-red-500 focus:ring-red-500/20 focus:border-red-500" : "",
         className,
     ]
         .filter(Boolean)
         .join(" ");
 
     return (
-        // Full-width container for proper form layout
-        <div className="w-full">
-            {/* Form label with required indicator */}
+        <div className="w-full min-w-0">
             {label && (
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
                     {label}
                     {required && <span className="text-red-500 ml-1">*</span>}
                 </label>
             )}
 
-            {/* Main input element with dynamic styling */}
             <input
                 type={type}
                 placeholder={placeholder}
@@ -126,8 +47,7 @@ function Input({
                 {...props}
             />
 
-            {/* Error message display */}
-            {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
+            {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
         </div>
     );
 }
