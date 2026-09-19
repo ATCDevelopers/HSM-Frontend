@@ -22,9 +22,28 @@ import {ChevronDownIcon} from "@heroicons/react/24/outline";
 const MENU_WIDTH = 192; // matches w-48
 const ROW_HEIGHT = 40; // approx height per item, for flip estimation
 
+export interface DropdownItem {
+    label: React.ReactNode;
+    onClick?: () => void;
+    disabled?: boolean;
+    className?: string;
+}
+
+export interface DropdownProps {
+    children?: React.ReactNode;
+    items: DropdownItem[];
+    trigger?: React.ReactNode;
+    position?: "bottom-left" | "bottom-right" | "top-left" | "top-right";
+    className?: string;
+    triggerClassName?: string;
+    dropdownClassName?: string;
+    showChevron?: boolean;
+    triggerAriaLabel?: string;
+}
+
 function Dropdown({
                       children,
-                      items,
+                      items = [],
                       trigger,
                       position = "bottom-left",
                       className = "",
@@ -32,7 +51,7 @@ function Dropdown({
                       dropdownClassName = "",
                       showChevron = true,
                       triggerAriaLabel,
-                  }) {
+                  }: DropdownProps) {
     const [isOpen, setIsOpen] = useState(false);
     const [coords, setCoords] = useState({top: 0, left: 0});
     const triggerRef = useRef(null);

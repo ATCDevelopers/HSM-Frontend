@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 
 const SLIDES = [
   "/hero/hero1.webp",
@@ -59,37 +60,100 @@ const SERVICES = [
 export default function Landing() {
   const navigate = useNavigate();
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % SLIDES.length);
-    }, 5000); // change image every 5 seconds
+    }, 5000);
     return () => clearInterval(interval);
   }, []);
 
   return (
     <div className="min-h-screen bg-white">
       {/* Top nav */}
-      <header className="sticky top-0 z-50 flex items-center justify-between px-6 sm:px-10 py-5 bg-white shadow-sm">
-        <h1 className="text-2xl font-serif tracking-widest text-[#173A5E]">
-          HMS
-        </h1>
-        <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-700">
-          <a href="#home">Home</a>
-          <a href="#about">About Us</a>
-          <a href="#service">Service</a>
-          <a href="#contact">Contact</a>
-        </nav>
-        <button
-          onClick={() => navigate("/login")}
-          className="rounded-full bg-[#173A5E] px-5 py-2 text-sm font-semibold text-white hover:bg-[#20507f]"
-        >
-          Login
-        </button>
+      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md shadow-xs">
+        <div className="flex items-center justify-between px-4 sm:px-10 py-4 sm:py-5">
+          <div className="flex items-center gap-2">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#173A5E] font-bold text-white shadow-xs">
+              <span className="text-base font-black">H</span>
+            </div>
+            <h1 className="text-xl sm:text-2xl font-serif font-bold tracking-widest text-[#173A5E]">
+              HMS
+            </h1>
+          </div>
+
+          {/* Desktop Nav */}
+          <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-700">
+            <a href="#home" className="hover:text-blue-600 transition-colors">Home</a>
+            <a href="#about" className="hover:text-blue-600 transition-colors">About Us</a>
+            <a href="#service" className="hover:text-blue-600 transition-colors">Service</a>
+            <a href="#contact" className="hover:text-blue-600 transition-colors">Contact</a>
+          </nav>
+
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate("/login")}
+              className="rounded-full bg-[#173A5E] px-4 sm:px-6 py-2 text-xs sm:text-sm font-semibold text-white shadow-xs hover:bg-[#20507f] transition-all"
+            >
+              Staff Portal
+            </button>
+
+            {/* Mobile menu button */}
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen((prev) => !prev)}
+              aria-label="Toggle navigation menu"
+              className="md:hidden flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-100 transition-colors"
+            >
+              {mobileMenuOpen ? (
+                <XMarkIcon className="h-5 w-5" />
+              ) : (
+                <Bars3Icon className="h-5 w-5" />
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile menu dropdown */}
+        {mobileMenuOpen && (
+          <div className="md:hidden border-t border-gray-100 bg-white px-6 py-4 shadow-lg animate-fadeIn">
+            <div className="flex flex-col space-y-3 text-sm font-medium text-gray-800">
+              <a
+                href="#home"
+                onClick={() => setMobileMenuOpen(false)}
+                className="py-1.5 hover:text-blue-600"
+              >
+                Home
+              </a>
+              <a
+                href="#about"
+                onClick={() => setMobileMenuOpen(false)}
+                className="py-1.5 hover:text-blue-600"
+              >
+                About Us
+              </a>
+              <a
+                href="#service"
+                onClick={() => setMobileMenuOpen(false)}
+                className="py-1.5 hover:text-blue-600"
+              >
+                Services
+              </a>
+              <a
+                href="#contact"
+                onClick={() => setMobileMenuOpen(false)}
+                className="py-1.5 hover:text-blue-600"
+              >
+                Contact
+              </a>
+            </div>
+          </div>
+        )}
       </header>
 
       {/* Hero */}
-      <section className="relative overflow-hidden px-6 sm:px-10 py-16 sm:py-24 h-[560px] flex items-center">
+      <section id="home" className="relative overflow-hidden px-4 sm:px-10 py-16 sm:py-24 min-h-[560px] lg:h-[600px] flex items-center">
         {/* Slideshow background images — crossfade between slides */}
         {SLIDES.map((src, i) => (
           <div
@@ -103,10 +167,9 @@ export default function Landing() {
           />
         ))}
 
-        {/* Overlay — lighter now so the photo is actually visible */}
+        {/* Dark overlay */}
         <div className="absolute inset-0 bg-[#173A5E]/40" />
 
-        {/* rest of the section (dots, text, stats card) stays exactly the same */}
         {/* Slide indicator dots */}
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-20">
           {SLIDES.map((_, i) => (
@@ -121,28 +184,36 @@ export default function Landing() {
           ))}
         </div>
 
-        {/* Content sits above the image + overlay */}
-        <div className="relative z-10 max-w-xl">
-          <h2 className="text-4xl sm:text-5xl font-bold text-white leading-tight">
+        {/* Hero Content */}
+        <div className="relative z-10 max-w-xl text-left">
+          <h2 className="text-3xl sm:text-5xl font-extrabold text-white leading-tight">
             YOUR HEALTH,
             <br />
             <span className="text-blue-300">OUR PRIORITY.</span>
           </h2>
-          <p className="mt-5 text-blue-100 text-sm sm:text-base">
+          <p className="mt-4 sm:mt-5 text-blue-100 text-sm sm:text-base leading-relaxed">
             World-class specialists, cutting-edge technology, and compassionate
             care — all under one roof. Your health is our priority.
           </p>
-          <button
-            onClick={() => navigate("/get-started")}
-            className="mt-7 rounded-full bg-white px-6 py-3 text-sm font-semibold text-[#173A5E] hover:bg-blue-50"
-          >
-            Get Started
-          </button>
+          <div className="mt-6 sm:mt-8 flex flex-wrap gap-3">
+            <button
+              onClick={() => navigate("/get-started")}
+              className="rounded-full bg-white px-6 py-3 text-sm font-semibold text-[#173A5E] shadow-md hover:bg-blue-50 transition-all active:scale-95"
+            >
+              Get Started
+            </button>
+            <button
+              onClick={() => navigate("/login")}
+              className="rounded-full bg-blue-600/90 backdrop-blur-xs px-6 py-3 text-sm font-semibold text-white border border-blue-400/30 hover:bg-blue-600 transition-all active:scale-95"
+            >
+              Sign In
+            </button>
+          </div>
         </div>
 
-        {/* Stats card */}
-        <div className="relative z-10 mt-10 lg:absolute lg:right-10 lg:top-1/2 lg:-translate-y-1/2 lg:mt-0 max-w-xs rounded-2xl bg-white/95 p-6 shadow-xl">
-          <p className="text-sm font-semibold text-gray-500 mb-3">Our impact</p>
+        {/* Stats card (Desktop & Tablet) */}
+        <div className="hidden md:block relative z-10 lg:absolute lg:right-10 lg:top-1/2 lg:-translate-y-1/2 max-w-xs rounded-2xl bg-white/95 backdrop-blur-md p-6 shadow-xl border border-white/40">
+          <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Our Impact</p>
           <div className="space-y-3">
             {[
               ["Patients served", "120+"],
@@ -150,8 +221,8 @@ export default function Landing() {
               ["Success rate", "98.9%"],
               ["Years of care", "40+"],
             ].map(([label, value]) => (
-              <div key={label} className="flex justify-between text-sm">
-                <span className="text-gray-500">{label}</span>
+              <div key={label} className="flex justify-between items-center text-sm border-b border-gray-100 pb-1.5 last:border-0 last:pb-0">
+                <span className="text-gray-500 text-xs">{label}</span>
                 <span className="font-bold text-[#173A5E]">{value}</span>
               </div>
             ))}
@@ -162,35 +233,37 @@ export default function Landing() {
       {/* Why Choose Us */}
       <section
         id="about"
-        className="px-6 sm:px-10 py-16 bg-blue-50 text-center"
+        className="px-4 sm:px-10 py-14 sm:py-20 bg-blue-50/70 text-center"
       >
-        <h3 className="text-2xl sm:text-3xl font-bold text-gray-900">
-          Why Choose Us
-        </h3>
-        <p className="mt-2 text-gray-500 max-w-xl mx-auto text-sm sm:text-base">
-          Experience healthcare designed around you — advanced, accessible, and
-          always compassionate.
-        </p>
-        <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 max-w-5xl mx-auto">
-          {FEATURES.map((f) => (
-            <div
-              key={f.title}
-              className="rounded-2xl bg-white p-6 shadow-sm text-left"
-            >
-              <div className="text-2xl">{f.icon}</div>
-              <h4 className="mt-3 font-bold text-gray-900 text-sm">
-                {f.title}
-              </h4>
-              <p className="mt-1 text-xs text-gray-500">{f.desc}</p>
-            </div>
-          ))}
+        <div className="max-w-6xl mx-auto">
+          <h3 className="text-2xl sm:text-3xl font-bold text-gray-900">
+            Why Choose Us
+          </h3>
+          <p className="mt-2 text-gray-500 max-w-xl mx-auto text-sm sm:text-base">
+            Experience healthcare designed around you — advanced, accessible, and
+            always compassionate.
+          </p>
+          <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {FEATURES.map((f) => (
+              <div
+                key={f.title}
+                className="rounded-2xl bg-white p-6 shadow-xs border border-gray-100 text-left transition-all hover:shadow-md"
+              >
+                <div className="text-2xl">{f.icon}</div>
+                <h4 className="mt-3 font-bold text-gray-900 text-sm">
+                  {f.title}
+                </h4>
+                <p className="mt-1 text-xs text-gray-500 leading-relaxed">{f.desc}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
       {/* Services */}
-      <section id="service" className="px-6 sm:px-10 py-16">
-        <p className="text-xs font-semibold text-blue-600 mb-1">
-          -- Our Services
+      <section id="service" className="px-4 sm:px-10 py-14 sm:py-20 max-w-6xl mx-auto">
+        <p className="text-xs font-semibold text-blue-600 mb-1 tracking-wider uppercase">
+          Our Services
         </p>
         <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 max-w-lg">
           Comprehensive care <span className="text-blue-600">for</span> every
@@ -198,14 +271,16 @@ export default function Landing() {
         </h3>
         <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {SERVICES.map((s) => (
-            <div key={s.title} className="rounded-2xl bg-blue-50 p-6">
-              <div className="text-2xl">{s.icon}</div>
-              <h4 className="mt-3 font-bold text-gray-900 text-sm">
-                {s.title}
-              </h4>
-              <p className="mt-1 text-xs text-gray-500">{s.desc}</p>
-              <button className="mt-3 text-xs font-semibold text-blue-600">
-                learn more →
+            <div key={s.title} className="rounded-2xl bg-blue-50/60 border border-blue-100/80 p-6 flex flex-col justify-between hover:bg-blue-50 transition-colors">
+              <div>
+                <div className="text-2xl">{s.icon}</div>
+                <h4 className="mt-3 font-bold text-gray-900 text-sm">
+                  {s.title}
+                </h4>
+                <p className="mt-1 text-xs text-gray-600 leading-relaxed">{s.desc}</p>
+              </div>
+              <button className="mt-4 text-xs font-semibold text-blue-600 hover:text-blue-700 text-left">
+                Learn more →
               </button>
             </div>
           ))}
@@ -215,16 +290,18 @@ export default function Landing() {
       {/* Footer */}
       <footer
         id="contact"
-        className="bg-[#173A5E] px-6 sm:px-10 py-14 text-center"
+        className="bg-[#173A5E] px-4 sm:px-10 py-12 text-center text-white"
       >
-        <h4 className="text-xl font-serif tracking-widest text-white">HMS</h4>
-        <p className="mt-3 text-blue-100 text-sm max-w-md mx-auto">
-          Exceptional healthcare rooted in science, delivered with compassion.
-          Your well-being is our life's work.
-        </p>
-        <p className="mt-8 text-xs text-blue-300">
-          © 2026 Lumina Health Medical Center. All rights reserved.
-        </p>
+        <div className="max-w-4xl mx-auto">
+          <h4 className="text-xl font-serif font-bold tracking-widest text-white">HMS</h4>
+          <p className="mt-3 text-blue-100 text-sm max-w-md mx-auto leading-relaxed">
+            Exceptional healthcare rooted in science, delivered with compassion.
+            Your well-being is our life's work.
+          </p>
+          <div className="mt-8 pt-6 border-t border-blue-800 text-xs text-blue-300">
+            © 2026 Lumina Health Medical Center. All rights reserved.
+          </div>
+        </div>
       </footer>
     </div>
   );

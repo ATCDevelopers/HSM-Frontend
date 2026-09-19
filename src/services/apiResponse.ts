@@ -1,12 +1,3 @@
-/**
- * Helpers for reading Laravel API responses.
- *
- * List endpoints return a resource collection shaped like:
- *   { <resourceKey>: [...], links: {...}, meta: { current_page, last_page, per_page, total } }
- * where <resourceKey> is the resource name (e.g. "users", "unit_statuses").
- * Some endpoints may instead return a bare array or a { data: [...] } wrapper.
- */
-
 export interface ApiResponse<T = unknown> {
     data?: T;
     links?: Record<string, unknown>;
@@ -56,13 +47,7 @@ export function extractList<T = unknown>(response?: AxiosResponse<ApiResponse<T>
     return [];
 }
 
-/**
- * Extracts pagination info from a list response.
- *
- * @param {AxiosResponse} response - Axios response object.
- * @param {number} [fallbackCount=0] - Item count to use when no meta is present.
- * @returns {{ totalPages: number, totalItems: number }}
- */
+
 export function extractMeta(response?: AxiosResponse<ApiResponse | unknown[] | Record<string, unknown>> | null, fallbackCount: number = 0): {
     totalPages: number;
     totalItems: number;
@@ -87,13 +72,7 @@ export function extractMeta(response?: AxiosResponse<ApiResponse | unknown[] | R
     return {totalPages: 1, totalItems: fallbackCount};
 }
 
-/**
- * Extracts a single record from a show/detail response
- * (handles { data: {...} }, a bare object, or a single-element array).
- *
- * @param {AxiosResponse} response - Axios response object.
- * @returns {Object|null}
- */
+
 export function extractRecord<T = unknown>(response?: AxiosResponse<ApiResponse<T> | T | T[]> | null): T | null {
     const raw = response?.data;
     if (raw == null) return null;
@@ -105,5 +84,5 @@ export function extractRecord<T = unknown>(response?: AxiosResponse<ApiResponse<
         }
         return raw as T;
     }
-    return null;
+    return (raw as unknown as T) ?? null;
 }
