@@ -38,6 +38,9 @@ const MedicalRecordsShow = lazy(
 const ConsultationForm = lazy(
   () => import("../pages/medical-records/ConsultationForm"),
 );
+const LabTestConfig = lazy(
+  () => import("../pages/laboratory/labTestConfig"),
+);
 
 const UsersIndex = lazy(() => import("../pages/users/Index"));
 const RegisterUser = lazy(() => import("../pages/users/Register"));
@@ -268,6 +271,32 @@ function AppRoutes() {
           }
         />
 
+        {/* Laboratory test configuration and result submission */}
+        <Route
+          path="/laboratory"
+          element={
+            <ProtectedRoute>
+              <LabTestConfig />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/laboratory/new"
+          element={
+            <ProtectedRoute>
+              <LabTestConfig />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/laboratory/:id/edit"
+          element={
+            <ProtectedRoute>
+              <LabTestConfig />
+            </ProtectedRoute>
+          }
+        />
+
         {/* Users */}
         <Route
           path="/users"
@@ -397,6 +426,8 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+
+        
 
         {/* 404 */}
         <Route path="*" element={<NotFound />} />
