@@ -101,10 +101,10 @@ export const modules: Module[] = [
         path: '/appointments/history',
       },
       {
-        id: 'appointments-status',
-        name: 'Status',
+        id: 'appointments-reports',
+        name: 'Reports',
         icon: 'ChartBar',
-        path: '/appointments/:id/status',
+        path: '/appointments/reports',
       },
     ],
   },
