@@ -56,7 +56,7 @@ function Guest({
 
       {/* Subtle Footer */}
       <footer className="py-4 text-center text-xs text-slate-400">
-        © {new Date().getFullYear()} Lumina Health Medical Center. All rights reserved.
+        © {new Date().getFullYear()} HSM Health Medical Center. All rights reserved.
       </footer>
     </div>
   );

@@ -13,6 +13,7 @@ import { NewBookingPage } from "../pages/appointments/New-bookingpage";
 import { DoctorSchedulePage } from "../pages/appointments/Doctor-schedulepage";
 import { PatientHistoryPage } from "../pages/appointments/Patient-appointment";
 import { AppointmentStatusPage } from "../pages/appointments/Status-page";
+import { AppointmentReportsPage } from "../pages/appointments/Reports";
 
 const Home = lazy(() => import("../pages/home/Home"));
 const Dashboard = lazy(() => import("../pages/dashboard/Index"));
@@ -188,6 +189,14 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <AppointmentStatusPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/appointments/reports"
+          element={
+            <ProtectedRoute>
+              <AppointmentReportsPage />
             </ProtectedRoute>
           }
         />
