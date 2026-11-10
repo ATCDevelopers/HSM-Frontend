@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import {
   BeakerIcon,
@@ -13,11 +13,14 @@ import {
   UserIcon,
   UsersIcon,
   ArrowLeftOnRectangleIcon,
+  ChevronDownIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { useSidebar } from "../../contexts/SidebarContext";
 import { useAuth } from "../../auth/AuthContext";
 import { modules, canAccessModule } from "../../config/modules";
+import { departmentStaffAPI } from "../../services/departmentAPI";
+import { StarIcon } from "@heroicons/react/24/solid";
 import Swal from "sweetalert2";
 
 const icons = {
@@ -75,6 +78,18 @@ export default function Sidebar() {
   }, [isMobile, open]);
 
   const userModules = modules.filter((module) => canAccessModule(module, user?.role));
+
+  // Being head of a department is per person, not per role, so the entrance is loaded rather than configured.
+  const [headOf, setHeadOf] = useState<{ id: string; name: string }[]>([]);
+  useEffect(() => {
+    if (!user?.id) return setHeadOf([]);
+    departmentStaffAPI.me().then((me) => setHeadOf(me?.headOf ?? [])).catch(() => setHeadOf([]));
+  }, [user?.id]);
+
+  // Dropdown groups start expanded when the current page lives inside them.
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const isInside = (path: string) => location.pathname === path || location.pathname.startsWith(`${path}/`);
+  const toggle = (id: string, current: boolean) => setExpanded((prev) => ({ ...prev, [id]: !current }));
 
   async function handleLogout() {
     const result = await Swal.fire({
@@ -156,10 +171,71 @@ export default function Sidebar() {
             Navigation Menu
           </div>
 
+          {headOf.map((dept) => (
+            <NavLink
+              key={`head-${dept.id}`}
+              to={`/departments/${dept.id}`}
+              onClick={() => {
+                if (isMobile) close();
+              }}
+              className={({ isActive }) =>
+                `group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${
+                  isActive ? "bg-amber-500 text-white shadow-sm" : "bg-amber-500/10 text-amber-300 hover:bg-amber-500/20 hover:text-amber-200"
+                }`
+              }
+            >
+              <StarIcon className="h-5 w-5 shrink-0" />
+              <span className="min-w-0 flex-1 truncate">My Department</span>
+              <span className="truncate text-[10px] font-semibold opacity-80">{dept.name}</span>
+            </NavLink>
+          ))}
+
           {userModules.map((module) => {
             const Icon =
               icons[module.icon as keyof typeof icons] ??
               ClipboardDocumentListIcon;
+            const children = (module.children ?? []).filter((child) => canAccessModule(child, user?.role));
+
+            if (children.length > 0) {
+              const isOpen = expanded[module.id] ?? isInside(module.path);
+              return (
+                <div key={module.id}>
+                  <button
+                    type="button"
+                    onClick={() => toggle(module.id, isOpen)}
+                    aria-expanded={isOpen}
+                    className={`group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${
+                      isInside(module.path) ? "text-white" : "text-slate-300 hover:bg-slate-800/80 hover:text-white"
+                    }`}
+                  >
+                    <Icon className="h-5 w-5 shrink-0 transition-transform group-hover:scale-105" />
+                    <span className="flex-1 truncate text-left">{module.name}</span>
+                    <ChevronDownIcon className={`h-4 w-4 shrink-0 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+                  </button>
+                  {isOpen && (
+                    <div className="ml-5 mt-1 space-y-0.5 border-l border-slate-700/80 pl-3">
+                      {children.map((child) => (
+                        <NavLink
+                          key={child.id}
+                          to={child.path}
+                          end
+                          onClick={() => {
+                            if (isMobile) close();
+                          }}
+                          className={({ isActive }) =>
+                            `block truncate rounded-lg px-3 py-2 text-[13px] font-medium transition-colors ${
+                              isActive ? "bg-blue-600 text-white" : "text-slate-400 hover:bg-slate-800/80 hover:text-white"
+                            }`
+                          }
+                        >
+                          {child.name}
+                        </NavLink>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            }
 
             return (
               <NavLink

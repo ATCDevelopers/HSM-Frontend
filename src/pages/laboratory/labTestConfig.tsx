@@ -6,10 +6,8 @@ import Button from "../../components/atoms/ui/Button";
 import Input from "../../components/atoms/forms/Input";
 import {
   labTestAPI,
-  labTestResultAPI,
   type FormFieldSchema,
   type CreateLabTestPayload,
-  type LabTest,
 } from "../../services/labTestConfigAPI";
 import { useAuth } from "../../auth/AuthContext";
 import { can } from "../../config/ability";
@@ -43,14 +41,6 @@ export default function LabTestForm() {
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(isEditMode);
 
-  // Result submission state. Values use the field IDs from the selected template.
-  const [templates, setTemplates] = useState<LabTest[]>([]);
-  const [selectedTemplateId, setSelectedTemplateId] = useState("");
-  const [patientId, setPatientId] = useState("");
-  const [resultValues, setResultValues] = useState<Record<string, string>>({});
-  const [resultNotes, setResultNotes] = useState("");
-  const [submittingResult, setSubmittingResult] = useState(false);
-
   // Hook to pull active template configuration matrix if editing
   useEffect(() => {
     if (!isEditMode) return;
@@ -68,17 +58,6 @@ export default function LabTestForm() {
       })
       .finally(() => setFetching(false));
   }, [id, isEditMode, navigate]);
-
-  useEffect(() => {
-    labTestAPI.list()
-      .then((items) => {
-        setTemplates(items);
-        if (items.length > 0) setSelectedTemplateId(items[0].id);
-      })
-      .catch(() => {
-        // Template loading errors are shown when the user attempts submission.
-      });
-  }, []);
 
   // Appends a single structured dynamic form field setup definition to our JSONB layout state
   const handleAddField = (e: React.FormEvent) => {
@@ -122,84 +101,6 @@ export default function LabTestForm() {
 
   const handleRemoveField = (indexToRemove: number) => {
     setFormFields(formFields.filter((_, idx) => idx !== indexToRemove));
-  };
-
-  const selectedTemplate = templates.find((template) => template.id === selectedTemplateId);
-
-  const handleTemplateChange = (templateId: string) => {
-    setSelectedTemplateId(templateId);
-    setResultValues({});
-  };
-
-  const handleResultValueChange = (fieldId: string, value: string) => {
-    setResultValues((current) => ({ ...current, [fieldId]: value }));
-  };
-
-  const handleSubmitResult = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedTemplate) {
-      Swal.fire("Required", "Select a laboratory test template.", "warning");
-      return;
-    }
-    if (!patientId.trim()) {
-      Swal.fire("Required", "Enter the patient UUID.", "warning");
-      return;
-    }
-
-    const missingField = selectedTemplate.formSchema.find(
-      (field) => field.required && !resultValues[field.id]?.trim(),
-    );
-    if (missingField) {
-      Swal.fire("Required", `${missingField.label} is required.`, "warning");
-      return;
-    }
-
-    const values: Record<string, string | number> = {};
-    for (const field of selectedTemplate.formSchema) {
-      const rawValue = resultValues[field.id]?.trim() ?? "";
-      if (!rawValue) continue;
-
-      if (field.type === "number") {
-        const numericValue = Number(rawValue);
-        if (Number.isNaN(numericValue)) {
-          Swal.fire("Invalid value", `${field.label} must be a number.`, "warning");
-          return;
-        }
-        if (field.validation?.min !== undefined && numericValue < field.validation.min) {
-          Swal.fire("Invalid value", `${field.label} must be at least ${field.validation.min}.`, "warning");
-          return;
-        }
-        if (field.validation?.max !== undefined && numericValue > field.validation.max) {
-          Swal.fire("Invalid value", `${field.label} must be at most ${field.validation.max}.`, "warning");
-          return;
-        }
-        values[field.id] = numericValue;
-      } else {
-        if (field.type === "select" && field.options && !field.options.includes(rawValue)) {
-          Swal.fire("Invalid value", `Select a valid option for ${field.label}.`, "warning");
-          return;
-        }
-        values[field.id] = rawValue;
-      }
-    }
-
-    setSubmittingResult(true);
-    try {
-      await labTestResultAPI.create({
-        labTestTemplateId: selectedTemplate.id,
-        patientId: patientId.trim(),
-        values,
-        notes: resultNotes.trim() || undefined,
-      });
-      await Swal.fire("Submitted", "The laboratory result was saved successfully.", "success");
-      setPatientId("");
-      setResultValues({});
-      setResultNotes("");
-    } catch (err) {
-      Swal.fire("Submission failed", err instanceof Error ? err.message : "Failed to save laboratory result.", "error");
-    } finally {
-      setSubmittingResult(false);
-    }
   };
 
   // Submit complete template configurations directly to Express endpoint /api/v1/labtest
@@ -414,79 +315,6 @@ export default function LabTestForm() {
                 )}
               </div>
 
-              <form onSubmit={handleSubmitResult} className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-                <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider border-b pb-2 mb-4 text-blue-600">
-                  4. Submit Laboratory Result
-                </h3>
-
-                <div className="space-y-4">
-                  <Input
-                    label="Patient UUID"
-                    value={patientId}
-                    onChange={(e) => setPatientId(e.target.value)}
-                    placeholder="a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d"
-                    required
-                  />
-
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-500 mb-1">Test Template</label>
-                    <select
-                      value={selectedTemplateId}
-                      onChange={(e) => handleTemplateChange(e.target.value)}
-                      className="w-full rounded-xl border-gray-200 bg-gray-50/50 p-2.5 text-sm font-medium text-gray-800 focus:border-blue-500"
-                      required
-                    >
-                      <option value="">Select a saved template</option>
-                      {templates.map((template) => (
-                        <option key={template.id} value={template.id}>{template.name}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {selectedTemplate?.formSchema.map((field) => (
-                    <div key={field.id}>
-                      {field.type === "select" ? (
-                        <>
-                          <label className="block text-xs font-semibold text-gray-500 mb-1">{field.label}</label>
-                          <select
-                            value={resultValues[field.id] ?? ""}
-                            onChange={(e) => handleResultValueChange(field.id, e.target.value)}
-                            className="w-full rounded-xl border-gray-200 bg-gray-50/50 p-2.5 text-sm text-gray-800 focus:border-blue-500"
-                            required={field.required}
-                          >
-                            <option value="">Select an option</option>
-                            {field.options?.map((option) => <option key={option} value={option}>{option}</option>)}
-                          </select>
-                        </>
-                      ) : (
-                        <Input
-                          label={field.label}
-                          type={field.type === "number" ? "number" : "text"}
-                          value={resultValues[field.id] ?? ""}
-                          onChange={(e) => handleResultValueChange(field.id, e.target.value)}
-                          required={field.required}
-                          min={field.validation?.min}
-                          max={field.validation?.max}
-                        />
-                      )}
-                    </div>
-                  ))}
-
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-500 mb-1">Notes</label>
-                    <textarea
-                      value={resultNotes}
-                      onChange={(e) => setResultNotes(e.target.value)}
-                      placeholder="Optional clinical notes"
-                      className="h-24 w-full resize-none rounded-xl border-gray-200 bg-gray-50/50 p-2.5 text-sm text-gray-800 focus:border-blue-500"
-                    />
-                  </div>
-
-                  <Button type="submit" variant="success" disabled={submittingResult || !selectedTemplate}>
-                    {submittingResult ? "Submitting Result..." : "Save Laboratory Result"}
-                  </Button>
-                </div>
-              </form>
             </div>
           </div>
         </div>

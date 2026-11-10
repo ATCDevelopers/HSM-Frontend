@@ -48,6 +48,8 @@ export interface UpdateLabTestPayload {
 export interface CreateLabTestResultPayload {
   labTestTemplateId: string;
   patientId: string;
+  /** Doctor the result is sent to for review. */
+  doctorId?: string;
   values: Record<string, string | number>;
   notes?: string;
 }
@@ -143,7 +145,31 @@ export const labTestAPI = {
   },
 };
 
+/** Row from GET /test-results, with test, patient and doctor names joined in. */
+export interface LabResultListItem {
+  id: string;
+  labTestTemplateId: string;
+  testName: string | null;
+  testCategory: string | null;
+  formSchema: FormFieldSchema[] | null;
+  patientId: string;
+  patientFirstName: string | null;
+  patientLastName: string | null;
+  doctorId: string | null;
+  doctorFirstName: string | null;
+  doctorLastName: string | null;
+  values: Record<string, string | number>;
+  notes: string | null;
+  createdAt: string;
+}
+
 export const labTestResultAPI = {
+  /** GET /api/v1/test-results — doctors only receive results sent to them. */
+  list: async (doctorId?: string): Promise<LabResultListItem[]> => {
+    const response = await API.get<ApiResponse<LabResultListItem[]>>("test-results", { params: { doctorId } });
+    return response.data.data ?? [];
+  },
+
   /** POST /api/v1/test-results */
   create: async (payload: CreateLabTestResultPayload): Promise<LabTestResult> => {
     const response = await API.post<ApiResponse<LabTestResult>>("test-results", payload);

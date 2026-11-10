@@ -1,7 +1,10 @@
 import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import BaseLayout from "../../components/layouts/BaseLayout.tsx";
-import API from "../../services/api";
+import Swal from "sweetalert2";
+import { useAuth } from "../../auth/AuthContext";
+import { consultationAPI } from "../../services/emrAPI";
+import { getErrorMessage } from "../../services/apiResponse";
 import StepWizard from "./StepWizard";
 import type { ConsultationFormInput } from "./types";
 
@@ -86,8 +89,10 @@ const STEP_LABELS = [...STEPS.map((s) => s.label), "Review"];
 export default function ConsultationForm() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { user } = useAuth();
   const patientId = searchParams.get("patientId") ?? "";
-  const doctorId = searchParams.get("doctorId") ?? "";
+  // The signed-in clinician records the consultation unless a doctor is passed explicitly.
+  const doctorId = searchParams.get("doctorId") ?? user?.id ?? "";
   const backToHistoryUrl = patientId
     ? `/medical-records/${patientId}`
     : "/medical-records";
@@ -154,9 +159,20 @@ export default function ConsultationForm() {
         preliminary_diagnosis: values.preliminary_diagnosis,
         investigation_requirement: values.investigation_requirement,
       };
-      await API.post("consultations", payload);
+      await consultationAPI.create({
+        doctorId: payload.doctor_id,
+        patientId: payload.patient_id,
+        chiefComplaint: payload.chief_complaint,
+        historyOfPresentIllness: payload.history_of_present_illness,
+        medicalHistory: payload.medical_history,
+        physicalExamination: payload.physical_examination,
+        preliminaryDiagnosis: payload.preliminary_diagnosis,
+        investigationRequirements: payload.investigation_requirement,
+      });
       setSaved(true);
       setTimeout(goBackToHistory, 1200);
+    } catch (e: unknown) {
+      Swal.fire("Could not save consultation", getErrorMessage(e), "error");
     } finally {
       setSubmitting(false);
     }

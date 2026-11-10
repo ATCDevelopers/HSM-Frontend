@@ -1,123 +1,188 @@
-import React from 'react';
-import { ArrowRightIcon, CalendarDaysIcon, ClockIcon, ShieldCheckIcon } from '@heroicons/react/24/outline';
-import { useNavigate, useParams } from 'react-router-dom';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import Swal from 'sweetalert2';
 import BaseLayout from '../../components/layouts/BaseLayout';
+import { useAuth } from '../../auth/AuthContext';
+import { can } from '../../config/ability';
+import { getErrorMessage } from '../../services/apiResponse';
+import {
+  appointmentAPI,
+  type Appointment,
+  type AppointmentStatus,
+  STATUS_LABELS,
+  STATUS_STYLES,
+  STATUS_TRANSITIONS,
+  doctorName,
+  patientName,
+  toDateKey,
+} from '../../services/appointmentAPI';
+import SlotPicker from './SlotPicker';
+
+const ACTION_LABELS: Partial<Record<AppointmentStatus, string>> = {
+  confirmed: 'Confirm',
+  checked_in: 'Check in',
+  completed: 'Mark completed',
+  no_show: 'Mark no-show',
+};
 
 export const AppointmentStatusPage: React.FC = () => {
+  const { id = '' } = useParams();
   const navigate = useNavigate();
-  const { id } = useParams();
+  const { user } = useAuth();
+  const canUpdate = can('update', 'Appointment', user?.role);
+
+  const [appointment, setAppointment] = useState<Appointment | null>(null);
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [rescheduling, setRescheduling] = useState(false);
+  const [newDate, setNewDate] = useState(toDateKey(new Date()));
+  const [newTime, setNewTime] = useState('');
+
+  const load = useCallback(() => {
+    appointmentAPI
+      .get(id)
+      .then(setAppointment)
+      .catch((e: unknown) => setError(getErrorMessage(e, 'Failed to load appointment')));
+  }, [id]);
+
+  useEffect(load, [load]);
+
+  const run = async (action: () => Promise<unknown>, success: string) => {
+    setBusy(true);
+    setError('');
+    try {
+      await action();
+      Swal.fire({ title: success, icon: 'success', timer: 1200, showConfirmButton: false });
+      load();
+    } catch (e: unknown) {
+      setError(getErrorMessage(e, 'Action failed'));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const cancel = async () => {
+    const { value: reason } = await Swal.fire({
+      title: 'Cancel appointment',
+      input: 'text',
+      inputLabel: 'Reason (kept in the audit log)',
+      showCancelButton: true,
+      confirmButtonText: 'Cancel appointment',
+      confirmButtonColor: '#d33',
+      inputValidator: (v) => (!v?.trim() ? 'A reason is required' : undefined),
+    });
+    if (reason) run(() => appointmentAPI.cancel(id, reason.trim()), 'Appointment cancelled');
+  };
+
+  const reschedule = () => {
+    if (!newTime) {
+      setError('Pick a new time slot.');
+      return;
+    }
+    run(async () => {
+      await appointmentAPI.reschedule(id, { appointmentDate: newDate, appointmentTime: newTime });
+      setRescheduling(false);
+      setNewTime('');
+    }, 'Appointment rescheduled');
+  };
+
+  if (!appointment) {
+    return (
+      <BaseLayout resourceName="Appointment Status">
+        <div className="rounded-2xl bg-white p-8 text-sm text-gray-500 shadow-sm">{error || 'Loading appointment...'}</div>
+      </BaseLayout>
+    );
+  }
+
+  const next = STATUS_TRANSITIONS[appointment.status].filter((s) => s !== 'cancelled');
+  const isOpen = STATUS_TRANSITIONS[appointment.status].length > 0;
 
   return (
-    <BaseLayout resourceName="Appointments">
-      <div className="w-full rounded-3xl bg-linear-to-br from-indigo-50 via-white to-blue-50 p-6 shadow-sm ring-1 ring-indigo-100">
-        <div className="mx-auto w-full">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+    <BaseLayout resourceName="Appointment Status">
+      <div className="mx-auto w-full max-w-4xl space-y-6">
+        <Link to="/appointments" className="text-sm font-semibold text-blue-600 hover:text-blue-700">← Back to appointments</Link>
+
+        <section className="rounded-3xl bg-white p-5 shadow-sm ring-1 ring-gray-100 sm:p-8">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <p className="text-sm font-medium uppercase tracking-[0.2em] text-indigo-600">Status</p>
-              <h2 className="mt-2 text-2xl font-bold text-gray-900">Appointment Status</h2>
-              <p className="mt-1 text-sm text-gray-500">Real-time tracking for appointment ID: {id || 'Not selected'}</p>
+              <p className="text-sm text-gray-500">Appointment</p>
+              <h1 className="text-2xl font-bold text-gray-900">{patientName(appointment)}</h1>
+              <p className="mt-1 text-sm text-gray-500">with Dr. {doctorName(appointment)}</p>
             </div>
-            <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={() => navigate('/appointments/history')}
-                className="rounded-xl bg-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-800 transition hover:bg-slate-300"
-              >
-                View History
-              </button>
-              <button
-                type="button"
-                onClick={() => navigate('/appointments')}
-                className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-600/20 transition hover:bg-blue-700"
-              >
-                Dashboard
-              </button>
-            </div>
+            <span className={`self-start rounded-full px-3 py-1 text-sm font-semibold ${STATUS_STYLES[appointment.status]}`}>{STATUS_LABELS[appointment.status]}</span>
           </div>
 
-          <div className="mt-6 grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
-            <div className="rounded-3xl bg-linear-to-br from-indigo-600 via-blue-600 to-cyan-500 p-6 text-white shadow-xl shadow-indigo-500/20">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm uppercase tracking-[0.2em] text-indigo-100">Current state</p>
-                  <p className="mt-3 text-3xl font-bold">Unavailable</p>
-                </div>
-                <div className="flex h-16 w-16 items-center justify-center rounded-full border-4 border-white/30 bg-white/10 text-lg font-bold">
-                  72%
-                </div>
+          <dl className="mt-6 grid gap-4 text-sm sm:grid-cols-2">
+            {[
+              ['Date', toDateKey(new Date(appointment.appointmentDate))],
+              ['Time', appointment.appointmentTime],
+              ['Type', appointment.appointmentType],
+              ['Priority', appointment.priority],
+              ['Reason', appointment.reason],
+            ].map(([label, value]) => (
+              <div key={label} className="rounded-xl bg-gray-50 p-3">
+                <dt className="text-xs uppercase tracking-wider text-gray-400">{label}</dt>
+                <dd className="mt-1 font-medium capitalize text-gray-900">{value}</dd>
               </div>
+            ))}
+          </dl>
 
-              <div className="mt-6 space-y-4">
-                <div className="flex items-center justify-between rounded-2xl bg-white/10 p-3">
-                  <div className="flex items-center gap-3">
-                    <ClockIcon className="h-5 w-5 text-cyan-200" />
-                    <span className="text-sm text-indigo-100">Estimated wait</span>
-                  </div>
-                  <span className="font-semibold">Available from API</span>
-                </div>
+          {error && <div className="mt-6 rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</div>}
 
-                <div className="flex items-center justify-between rounded-2xl bg-white/10 p-3">
-                  <div className="flex items-center gap-3">
-                    <ShieldCheckIcon className="h-5 w-5 text-cyan-200" />
-                    <span className="text-sm text-indigo-100">Check-in status</span>
-                  </div>
-                  <span className="font-semibold">Available from API</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-              <h3 className="text-lg font-bold text-gray-900">Appointment details</h3>
-              <div className="mt-5 space-y-4">
-                {[
-                  ['Appointment ID', id || 'Not selected'],
-                  ['Doctor', 'Available from API'],
-                  ['Scheduled time', 'Available from API'],
-                  ['Department', 'Available from API'],
-                ].map(([label, value]) => (
-                  <div key={label} className="flex items-center justify-between border-b border-slate-100 pb-3 last:border-b-0 last:pb-0">
-                    <span className="text-sm text-slate-500">{label}</span>
-                    <span className="font-semibold text-slate-800">{value}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-bold text-gray-900">Visit progress</h3>
-                <p className="text-sm text-slate-500">Current stage in the appointment flow</p>
-              </div>
-              <button type="button" className="inline-flex items-center gap-2 rounded-xl bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-700">
-                Follow up <ArrowRightIcon className="h-4 w-4" />
-              </button>
-            </div>
-
-            <div className="mt-6 space-y-4">
-              {[
-                ['Appointment progress', 'Available from API', 'upcoming'],
-              ].map(([title, time, state], index) => (
-                <div key={title} className="flex items-center gap-4">
-                  <div className="flex flex-col items-center">
-                    <div className={`h-3.5 w-3.5 rounded-full ${state === 'done' ? 'bg-emerald-500' : state === 'active' ? 'bg-blue-600' : 'bg-slate-200'}`} />
-                    {index < 2 && <div className="mt-2 h-8 w-px bg-slate-200" />}
-                  </div>
-                  <div className="flex w-full items-center justify-between rounded-2xl bg-slate-50 px-4 py-3">
-                    <div>
-                      <p className="font-medium text-slate-800">{title}</p>
-                      <p className="text-xs text-slate-500">{time}</p>
-                    </div>
-                    <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${state === 'done' ? 'bg-emerald-100 text-emerald-700' : state === 'active' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600'}`}>
-                      {state === 'done' ? 'Done' : state === 'active' ? 'Now' : 'Next'}
-                    </span>
-                  </div>
-                </div>
+          {canUpdate && isOpen && (
+            <div className="mt-6 flex flex-wrap gap-2">
+              {next.map((status) => (
+                <button
+                  key={status}
+                  type="button"
+                  disabled={busy}
+                  onClick={() => run(() => appointmentAPI.updateStatus(id, status), `Marked ${STATUS_LABELS[status].toLowerCase()}`)}
+                  className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
+                >
+                  {ACTION_LABELS[status] ?? STATUS_LABELS[status]}
+                </button>
               ))}
+              {appointment.status !== 'checked_in' && (
+                <button type="button" disabled={busy} onClick={() => setRescheduling((v) => !v)} className="rounded-xl border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50">
+                  Reschedule
+                </button>
+              )}
+              <button type="button" disabled={busy} onClick={cancel} className="rounded-xl border border-red-200 px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-50">
+                Cancel appointment
+              </button>
             </div>
-          </div>
-        </div>
+          )}
+
+          {appointment.status === 'checked_in' && can('write', 'Consultation', user?.role) && (
+            <button
+              type="button"
+              onClick={() => navigate(`/medical-records/consultations/new?patientId=${appointment.patientId}`)}
+              className="mt-4 rounded-xl bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700"
+            >
+              Start consultation
+            </button>
+          )}
+        </section>
+
+        {rescheduling && appointment.doctorId && (
+          <section className="space-y-4 rounded-3xl bg-white p-5 shadow-sm ring-1 ring-gray-100 sm:p-8">
+            <h2 className="text-lg font-bold text-gray-900">Reschedule</h2>
+            <input
+              type="date"
+              min={toDateKey(new Date())}
+              value={newDate}
+              onChange={(e) => {
+                setNewDate(e.target.value);
+                setNewTime('');
+              }}
+              className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none"
+            />
+            <SlotPicker doctorId={appointment.doctorId} date={newDate} value={newTime} onChange={setNewTime} />
+            <button type="button" disabled={busy} onClick={reschedule} className="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60">
+              Confirm new time
+            </button>
+          </section>
+        )}
       </div>
     </BaseLayout>
   );

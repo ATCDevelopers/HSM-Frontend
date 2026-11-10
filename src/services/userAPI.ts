@@ -8,6 +8,7 @@ export interface User {
   email: string;
   phoneNumber?: string;
   role: string;
+  departmentId?: string | null;
   status?: "ACTIVE" | "INACTIVE" | string;
   isDeleted?: boolean;
   deletedAt?: string | null;

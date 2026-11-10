@@ -1,178 +1,147 @@
-import React, { useState } from 'react';
-import { CalendarDaysIcon, ClockIcon, StarIcon, UserCircleIcon } from '@heroicons/react/24/outline';
-import { useNavigate } from 'react-router-dom';
-import BaseLayout from '../../components/layouts/BaseLayout';
+import React, { useEffect, useState } from 'react';
+import { CalendarDaysIcon } from '@heroicons/react/24/outline';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import Swal from 'sweetalert2';
+import BaseLayout from '../../components/layouts/BaseLayout';
+import { useAuth } from '../../auth/AuthContext';
+import { patientAPI, type Patient } from '../../services/patientAPI';
+import { getErrorMessage } from '../../services/apiResponse';
+import { appointmentAPI, doctorLabel, type AppointmentPriority, type Doctor, toDateKey } from '../../services/appointmentAPI';
+import SlotPicker from './SlotPicker';
+
+const APPOINTMENT_TYPES = ['Consultation', 'Follow-up', 'Check-up', 'Procedure', 'Emergency'];
+const PRIORITIES: AppointmentPriority[] = ['low', 'medium', 'high', 'emergency'];
+
+const fieldClass =
+  'w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20';
 
 export const NewBookingPage: React.FC = () => {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    patientName: '',
-    doctorId: '',
-    date: '',
-    timeSlot: '',
+  const [searchParams] = useSearchParams();
+  const { user } = useAuth();
+  const isDoctor = user?.role === 'Doctor';
+
+  const [patients, setPatients] = useState<Patient[]>([]);
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
+  const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [form, setForm] = useState({
+    patientId: searchParams.get('patientId') ?? '',
+    doctorId: isDoctor ? user?.id ?? '' : '',
+    appointmentDate: toDateKey(new Date()),
+    appointmentTime: '',
+    appointmentType: APPOINTMENT_TYPES[0],
+    priority: 'medium' as AppointmentPriority,
     reason: '',
   });
 
+  useEffect(() => {
+    Promise.all([patientAPI.list(), appointmentAPI.doctors()])
+      .then(([p, d]) => {
+        setPatients(p);
+        setDoctors(d);
+      })
+      .catch((e: unknown) => setError(getErrorMessage(e, 'Failed to load patients and doctors')));
+  }, []);
+
+  const update = (key: keyof typeof form, value: string) =>
+    setForm((prev) => ({
+      ...prev,
+      [key]: value,
+      // A slot only means something for the doctor/day it was picked on.
+      ...(key === 'doctorId' || key === 'appointmentDate' ? { appointmentTime: '' } : {}),
+    }));
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await Swal.fire({
-      title: 'Booking Confirmed!',
-      text: `Appointment for ${formData.patientName} has been booked.`,
-      icon: 'success',
-      timer: 2000,
-      showConfirmButton: false,
-    });
-    navigate('/appointments');
+    if (!form.patientId || !form.doctorId || !form.appointmentTime || !form.reason.trim()) {
+      setError('Choose a patient, doctor and time slot, and enter the reason for the visit.');
+      return;
+    }
+    setSubmitting(true);
+    setError('');
+    try {
+      const appointment = await appointmentAPI.book({ ...form, reason: form.reason.trim() });
+      await Swal.fire({ title: 'Booking confirmed', icon: 'success', timer: 1500, showConfirmButton: false });
+      navigate(appointment?.id ? `/appointments/${appointment.id}/status` : '/appointments');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Failed to book appointment'));
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  const quickSlots: string[] = [];
-
   return (
-    <BaseLayout resourceName="Appointments">
-      <div className="w-full rounded-3xl bg-linear-to-br from-sky-50 via-white to-indigo-50 p-6 shadow-sm ring-1 ring-sky-100">
-        <div className="mx-auto w-full">
-          <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <p className="text-sm font-medium uppercase tracking-[0.2em] text-blue-600">Booking</p>
-              <h2 className="mt-2 text-2xl font-bold text-gray-900">New Appointment Booking</h2>
-              <p className="mt-1 text-sm text-gray-500">Schedule a visit with your preferred healthcare professional.</p>
-            </div>
-            <button
-              type="button"
-              onClick={() => navigate('/appointments')}
-              className="rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-800"
-            >
-              Back to Dashboard
-            </button>
-          </div>
-
-          <div className="grid gap-6 xl:grid-cols-[0.85fr_1.35fr]">
-            <div className="rounded-3xl bg-linear-to-br from-blue-600 via-indigo-600 to-violet-600 p-6 text-white shadow-lg shadow-blue-600/20">
-              <div className="inline-flex rounded-full bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-blue-100">
-                Fast care
-              </div>
-              <h3 className="mt-5 text-2xl font-bold">Consultation made easy</h3>
-              <p className="mt-2 text-sm text-blue-100">Book in minutes and receive a quick confirmation from the clinic team.</p>
-
-              <div className="mt-8 space-y-4">
-                <div className="rounded-2xl bg-white/10 p-4 backdrop-blur-sm">
-                  <div className="flex items-center gap-3">
-                    <UserCircleIcon className="h-8 w-8 text-cyan-200" />
-                    <div>
-                      <p className="text-sm text-blue-100">Available doctor</p>
-                      <p className="font-semibold">Select from available doctors</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="rounded-2xl bg-white/10 p-4 backdrop-blur-sm">
-                  <div className="flex items-center gap-3">
-                    <ClockIcon className="h-8 w-8 text-cyan-200" />
-                    <div>
-                      <p className="text-sm text-blue-100">Average wait</p>
-                      <p className="font-semibold">Available from API</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="rounded-2xl bg-white/10 p-4 backdrop-blur-sm">
-                  <div className="flex items-center gap-3">
-                    <StarIcon className="h-8 w-8 text-cyan-200" />
-                    <div>
-                      <p className="text-sm text-blue-100">Patient rating</p>
-                      <p className="font-semibold">Available from API</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-              <form onSubmit={handleSubmit} className="space-y-5">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700">Patient name</label>
-                  <input
-                    type="text"
-                    className="mt-1 w-full rounded-xl border border-slate-200 bg-white py-2.75 px-4 text-sm text-slate-800 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
-                    value={formData.patientName}
-                    onChange={(e) => setFormData({ ...formData, patientName: e.target.value })}
-                    placeholder="Enter patient name"
-                    required
-                  />
-                </div>
-
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700">Doctor</label>
-                    <select
-                      className="mt-1 w-full rounded-xl border border-slate-200 bg-white py-2.75 px-4 text-sm text-slate-800 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
-                      value={formData.doctorId}
-                      onChange={(e) => setFormData({ ...formData, doctorId: e.target.value })}
-                    >
-                      <option value="">Doctor data unavailable</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700">Date</label>
-                    <input
-                      type="date"
-                      className="mt-1 w-full rounded-xl border border-slate-200 bg-white py-2.75 px-4 text-sm text-slate-800 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
-                      value={formData.date}
-                      onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-700">Time slot</label>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {quickSlots.length ? quickSlots.map((slot) => (
-                      <button
-                        key={slot}
-                        type="button"
-                        onClick={() => setFormData({ ...formData, timeSlot: slot })}
-                        className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${formData.timeSlot === slot ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-slate-200 bg-white text-slate-600 hover:border-blue-200 hover:text-blue-600'}`}
-                      >
-                        {slot}
-                      </button>
-                    )) : <p className="text-sm text-slate-400">Time slots will load after doctor availability is connected.</p>}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-700">Reason for visit</label>
-                  <textarea
-                    className="mt-1 w-full rounded-xl border border-slate-200 bg-white py-2.75 px-4 text-sm text-slate-800 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
-                    rows={4}
-                    value={formData.reason}
-                    onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
-                    placeholder="Describe the reason for the appointment"
-                  />
-                </div>
-
-                <div className="flex flex-col gap-3 sm:flex-row">
-                  <button
-                    type="submit"
-                    className="flex-1 rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-600/20 transition hover:bg-blue-700"
-                  >
-                    Confirm Booking
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => navigate('/appointments')}
-                    className="flex-1 rounded-xl bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-200"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
-            </div>
+    <BaseLayout resourceName="New Booking">
+      <form onSubmit={handleSubmit} className="mx-auto w-full max-w-4xl space-y-6 rounded-3xl bg-white p-4 shadow-sm ring-1 ring-gray-100 sm:p-8">
+        <div className="flex items-center gap-3">
+          <span className="rounded-xl bg-blue-100 p-2 text-blue-700"><CalendarDaysIcon className="h-6 w-6" /></span>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Book an appointment</h1>
+            <p className="text-sm text-gray-500">Pick the patient and doctor, then an open slot.</p>
           </div>
         </div>
-      </div>
+
+        {error && <div className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</div>}
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <label className="space-y-1 text-sm font-medium text-gray-700">
+            Patient *
+            <select className={fieldClass} value={form.patientId} onChange={(e) => update('patientId', e.target.value)}>
+              <option value="">Select patient</option>
+              {patients.map((p) => (
+                <option key={p.id} value={p.id}>{p.firstName} {p.lastName} · {p.phoneNumber}</option>
+              ))}
+            </select>
+          </label>
+          <label className="space-y-1 text-sm font-medium text-gray-700">
+            Doctor *
+            <select className={fieldClass} value={form.doctorId} disabled={isDoctor} onChange={(e) => update('doctorId', e.target.value)}>
+              <option value="">Select doctor</option>
+              {doctors.map((d) => (
+                <option key={d.id} value={d.id}>{doctorLabel(d)}</option>
+              ))}
+            </select>
+          </label>
+          <label className="space-y-1 text-sm font-medium text-gray-700">
+            Date *
+            <input type="date" className={fieldClass} min={toDateKey(new Date())} value={form.appointmentDate} onChange={(e) => update('appointmentDate', e.target.value)} />
+          </label>
+          <div className="grid grid-cols-2 gap-3">
+            <label className="space-y-1 text-sm font-medium text-gray-700">
+              Type
+              <select className={fieldClass} value={form.appointmentType} onChange={(e) => update('appointmentType', e.target.value)}>
+                {APPOINTMENT_TYPES.map((t) => <option key={t}>{t}</option>)}
+              </select>
+            </label>
+            <label className="space-y-1 text-sm font-medium text-gray-700">
+              Priority
+              <select className={fieldClass} value={form.priority} onChange={(e) => update('priority', e.target.value)}>
+                {PRIORITIES.map((p) => <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>)}
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <p className="text-sm font-medium text-gray-700">Time slot *</p>
+          <SlotPicker doctorId={form.doctorId} date={form.appointmentDate} value={form.appointmentTime} onChange={(t) => update('appointmentTime', t)} />
+        </div>
+
+        <label className="block space-y-1 text-sm font-medium text-gray-700">
+          Reason for visit *
+          <textarea rows={3} className={fieldClass} value={form.reason} onChange={(e) => update('reason', e.target.value)} placeholder="e.g. Persistent headache for 3 days" />
+        </label>
+
+        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+          <button type="button" onClick={() => navigate('/appointments')} className="rounded-xl border border-gray-200 px-5 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50">
+            Cancel
+          </button>
+          <button type="submit" disabled={submitting} className="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60">
+            {submitting ? 'Booking...' : 'Confirm booking'}
+          </button>
+        </div>
+      </form>
     </BaseLayout>
   );
 };

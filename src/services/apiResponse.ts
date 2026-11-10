@@ -86,3 +86,11 @@ export function extractRecord<T = unknown>(response?: AxiosResponse<ApiResponse<
     }
     return (raw as unknown as T) ?? null;
 }
+
+/** Prefers the backend's `{ error }` / `{ message }` body over axios's generic "Request failed with status code ..." text. */
+export function getErrorMessage(error: unknown, fallback = "Something went wrong"): string {
+    const body = (error as { response?: { data?: { error?: string; message?: string } } })?.response?.data;
+    if (body?.error) return body.error;
+    if (body?.message) return body.message;
+    return error instanceof Error ? error.message : fallback;
+}

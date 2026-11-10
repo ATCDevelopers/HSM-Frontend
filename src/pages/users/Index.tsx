@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { departmentAPI } from "../../services/departmentAPI";
 import { useNavigate } from "react-router-dom";
 import { EllipsisVerticalIcon, UserGroupIcon, CheckCircleIcon, XCircleIcon } from "@heroicons/react/24/outline";
 import BaseLayout from "../../components/layouts/BaseLayout";
@@ -20,6 +21,10 @@ export default function UsersIndex() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const [departmentNames, setDepartmentNames] = useState<Record<string, string>>({});
+  useEffect(() => {
+    departmentAPI.list().then((list) => setDepartmentNames(Object.fromEntries(list.map((d) => [d.id, d.name])))).catch(() => undefined);
+  }, []);
   const canCreate = can('create', 'User', user?.role) || can('manage', 'User', user?.role);
   const canUpdate = can('update', 'User', user?.role) || can('manage', 'User', user?.role);
   const canDelete = can('delete', 'User', user?.role) || can('manage', 'User', user?.role);
@@ -118,6 +123,11 @@ export default function UsersIndex() {
       key: "role",
       title: "Role",
       render: (val: string) => <span className="text-gray-700">{val}</span>,
+    },
+    {
+      key: "departmentId",
+      title: "Department",
+      render: (val: string | null) => <span className="text-gray-700">{(val && departmentNames[val]) || "—"}</span>,
     },
     {
       key: "status",

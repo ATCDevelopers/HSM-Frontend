@@ -1,108 +1,117 @@
-import React, { useState } from 'react';
-import { ArrowRightIcon, CalendarDaysIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import BaseLayout from '../../components/layouts/BaseLayout';
+import Table from '../../components/sections/Table';
+import { patientAPI, type Patient } from '../../services/patientAPI';
+import { getErrorMessage } from '../../services/apiResponse';
+import {
+  appointmentAPI,
+  type Appointment,
+  type AppointmentStatus,
+  type Doctor,
+  STATUS_LABELS,
+  STATUS_STYLES,
+  doctorName,
+  patientName,
+  toDateKey,
+} from '../../services/appointmentAPI';
 
+const filterClass = 'rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none';
+
+const daysFromToday = (days: number) => {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  return toDateKey(d);
+};
+
+/** All appointments, filterable by patient, doctor, status and date range. */
 export const PatientHistoryPage: React.FC = () => {
   const navigate = useNavigate();
-  const [searchTerm, setSearchTerm] = useState('');
-
-  const appointments: { id: number; doctor: string; type: string; date: string; time: string; status: string }[] = [];
-
-  const filteredAppointments = appointments.filter((appointment) => {
-    const query = searchTerm.toLowerCase();
-    return appointment.doctor.toLowerCase().includes(query) || appointment.type.toLowerCase().includes(query);
+  const [searchParams] = useSearchParams();
+  const [patients, setPatients] = useState<Patient[]>([]);
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
+  const [rows, setRows] = useState<Appointment[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [filters, setFilters] = useState({
+    patientId: searchParams.get('patientId') ?? '',
+    doctorId: '',
+    status: '' as AppointmentStatus | '',
+    startDate: daysFromToday(-30),
+    endDate: daysFromToday(30),
   });
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Completed':
-        return 'bg-green-100 text-green-700';
-      case 'Cancelled':
-        return 'bg-red-100 text-red-700';
-      default:
-        return 'bg-slate-100 text-slate-700';
-    }
-  };
+  useEffect(() => {
+    // Lookups are optional filters; a role without access to one just loses that dropdown.
+    patientAPI.list().then(setPatients).catch(() => undefined);
+    appointmentAPI.doctors().then(setDoctors).catch(() => undefined);
+  }, []);
+
+  useEffect(() => {
+    setLoading(true);
+    setError('');
+    appointmentAPI
+      .list({
+        patientId: filters.patientId || undefined,
+        doctorId: filters.doctorId || undefined,
+        status: filters.status || undefined,
+        startDate: filters.startDate || undefined,
+        endDate: filters.endDate || undefined,
+      })
+      .then((list) => setRows(list.reverse()))
+      .catch((e: unknown) => setError(getErrorMessage(e, 'Failed to load appointments')))
+      .finally(() => setLoading(false));
+  }, [filters]);
+
+  const set = (key: keyof typeof filters, value: string) => setFilters((prev) => ({ ...prev, [key]: value }));
+
+  const columns = [
+    { key: 'appointmentDate', title: 'Date', render: (_: unknown, a: Appointment) => <span className="whitespace-nowrap">{toDateKey(new Date(a.appointmentDate))} {a.appointmentTime}</span> },
+    { key: 'patient', title: 'Patient', render: (_: unknown, a: Appointment) => <span className="font-semibold text-gray-900">{patientName(a)}</span> },
+    { key: 'doctor', title: 'Doctor', render: (_: unknown, a: Appointment) => `Dr. ${doctorName(a)}` },
+    { key: 'appointmentType', title: 'Type' },
+    { key: 'reason', title: 'Reason' },
+    {
+      key: 'status',
+      title: 'Status',
+      render: (value: AppointmentStatus) => <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${STATUS_STYLES[value]}`}>{STATUS_LABELS[value]}</span>,
+    },
+  ];
 
   return (
-    <BaseLayout resourceName="Appointments">
-      <div className="w-full rounded-3xl bg-linear-to-br from-indigo-50 via-white to-sky-50 p-6 shadow-sm ring-1 ring-indigo-100">
-        <div className="mx-auto w-full">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <p className="text-sm font-medium uppercase tracking-[0.2em] text-indigo-600">History</p>
-              <h2 className="mt-2 text-2xl font-bold text-gray-900">Appointment History</h2>
-              <p className="mt-1 text-sm text-gray-500">Browse your medical visits and consultation records.</p>
-            </div>
-            <button
-              onClick={() => navigate('/appointments')}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800"
-            >
-              Back to Dashboard
-            </button>
-          </div>
-
-          <div className="mt-6 grid gap-4 sm:grid-cols-3">
-            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-slate-500">Total visits</span>
-                <CalendarDaysIcon className="h-5 w-5 text-blue-600" />
-              </div>
-              <p className="mt-3 text-2xl font-bold text-gray-900">{appointments.length}</p>
-            </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-slate-500">Completed</span>
-                <span className="rounded-full bg-green-100 px-2 py-1 text-xs font-semibold text-green-700">All</span>
-              </div>
-              <p className="mt-3 text-2xl font-bold text-gray-900">{appointments.length}</p>
-            </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-slate-500">Next review</span>
-                <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-semibold text-blue-700">Soon</span>
-              </div>
-              <p className="mt-3 text-2xl font-bold text-gray-900">Apr 08</p>
-            </div>
-          </div>
-
-          <div className="relative mt-6">
-            <MagnifyingGlassIcon className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-            <input
-              type="search"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search doctor name or appointment type"
-              aria-label="Search appointments"
-              className="w-full rounded-2xl border border-slate-200 bg-white py-3 pl-11 pr-4 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
-            />
-          </div>
-
-          <div className="mt-6 space-y-3">
-            {filteredAppointments.length ? filteredAppointments.map((appointment) => (
-              <button
-                key={appointment.id}
-                type="button"
-                onClick={() => navigate(`/appointments/${appointment.id}/status`)}
-                className="flex w-full cursor-pointer items-center justify-between rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-md"
-              >
-                <div className="flex-1">
-                  <p className="font-semibold text-gray-900">{appointment.doctor} — {appointment.type}</p>
-                  <p className="mt-1 text-sm text-gray-500">{appointment.date} • {appointment.time}</p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${getStatusColor(appointment.status)}`}>
-                    {appointment.status}
-                  </span>
-                  <ArrowRightIcon className="h-4 w-4 text-slate-400" />
-                </div>
-              </button>
-            )) : <p className="rounded-2xl border border-dashed border-slate-300 p-8 text-center text-sm text-slate-400">No appointment data available.</p>}
-          </div>
-
-          <p className="mt-4 text-xs text-slate-400">Showing {filteredAppointments.length} appointments</p>
+    <BaseLayout resourceName="Appointment History">
+      <div className="w-full space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Appointments</h1>
+          <p className="text-sm text-gray-500">Search past and upcoming appointments. Click a row to manage it.</p>
         </div>
+
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+          <select className={filterClass} value={filters.patientId} onChange={(e) => set('patientId', e.target.value)}>
+            <option value="">All patients</option>
+            {patients.map((p) => <option key={p.id} value={p.id}>{p.firstName} {p.lastName}</option>)}
+          </select>
+          <select className={filterClass} value={filters.doctorId} onChange={(e) => set('doctorId', e.target.value)}>
+            <option value="">All doctors</option>
+            {doctors.map((d) => <option key={d.id} value={d.id}>Dr. {d.firstName} {d.lastName}</option>)}
+          </select>
+          <select className={filterClass} value={filters.status} onChange={(e) => set('status', e.target.value)}>
+            <option value="">Any status</option>
+            {(Object.keys(STATUS_LABELS) as AppointmentStatus[]).map((s) => <option key={s} value={s}>{STATUS_LABELS[s]}</option>)}
+          </select>
+          <input type="date" className={filterClass} value={filters.startDate} onChange={(e) => set('startDate', e.target.value)} />
+          <input type="date" className={filterClass} value={filters.endDate} onChange={(e) => set('endDate', e.target.value)} />
+        </div>
+
+        {error && <div className="rounded-xl bg-amber-50 p-3 text-sm text-amber-800">{error}</div>}
+
+        <Table
+          columns={columns}
+          data={rows}
+          loading={loading}
+          emptyMessage="No appointments match these filters."
+          onRowClick={(a: Appointment) => navigate(`/appointments/${a.id}/status`)}
+        />
       </div>
     </BaseLayout>
   );
