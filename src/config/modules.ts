@@ -102,6 +102,12 @@ export const modules: Module[] = [
         icon: 'FileText',
         path: '/appointments/history',
       },
+      {
+        id: 'appointments-reports',
+        name: 'Reports',
+        icon: 'BarChart',
+        path: '/appointments/reports',
+      },
     ],
   },
 

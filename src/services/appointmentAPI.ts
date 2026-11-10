@@ -157,3 +157,7 @@ export const appointmentAPI = {
   saveSchedule: async (doctorId: string, schedules: DoctorSchedule[], leaves: DoctorLeave[] = []) =>
     extractRecord(await API.post(`doctors/${doctorId}/schedules`, { schedules, leaves })),
 };
+
+// Used by the Appointment Reports page (pages/appointments/Reports.tsx) from develop.
+export type AppointmentReportFilters = AppointmentFilters;
+export const getAppointmentReports = (filters: AppointmentReportFilters = {}) => appointmentAPI.list(filters);
