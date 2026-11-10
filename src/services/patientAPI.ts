@@ -10,6 +10,14 @@ export interface Address {
   country: string;
 }
 
+export type PaymentMode = "NHIF" | "INSURANCE" | "CASH";
+
+export const PAYMENT_MODE_LABELS: Record<PaymentMode, string> = {
+  NHIF: "NHIF",
+  INSURANCE: "Private insurance",
+  CASH: "Cash",
+};
+
 export interface Patient {
   id: string;
   firstName: string;
@@ -18,6 +26,7 @@ export interface Patient {
   gender: string;
   nhifCard: string;
   nhifNumber?: string;
+  paymentMode?: PaymentMode;
   email: string;
   dateOfBirth: string;
   bloodGroup: string;
@@ -36,7 +45,9 @@ export interface RegisterPatientPayload {
     lastName: string;
     middleName?: string;
     gender: string;
+    /** NHIF or insurance card number; left empty for cash patients. */
     nhifCard: string;
+    paymentMode: PaymentMode;
     email: string;
     dateOfBirth: string;
     bloodGroup: string;
@@ -101,6 +112,7 @@ export const patientAPI = {
           lastName: payload.lastName,
           gender: payload.gender,
           nhifCard: payload.nhifCard || payload.nhifNumber || "",
+          paymentMode: payload.paymentMode || "NHIF",
           email: payload.email,
           dateOfBirth: payload.dateOfBirth,
           bloodGroup: payload.bloodGroup,
@@ -144,5 +156,72 @@ export const patientAPI = {
 
   remove: async (id: string): Promise<void> => {
     await API.delete(`patients/${id}`);
+  },
+};
+
+// ─── Documents brought from other institutions ───────────────────────────────────────────────
+
+export const DOCUMENT_TYPES: { id: string; label: string }[] = [
+  { id: "referral_letter", label: "Referral letter" },
+  { id: "lab_report", label: "Lab report" },
+  { id: "imaging", label: "Imaging (X-ray, scan)" },
+  { id: "discharge_summary", label: "Discharge summary" },
+  { id: "prescription", label: "Prescription" },
+  { id: "medical_report", label: "Medical report" },
+  { id: "other", label: "Other" },
+];
+
+export const documentTypeLabel = (id?: string | null) => DOCUMENT_TYPES.find((t) => t.id === id)?.label ?? "Document";
+
+export interface PatientDocument {
+  id: string;
+  patientId: string;
+  documentName: string;
+  mimeType: string;
+  fileSize: string;
+  sourceInstitution: string | null;
+  documentType: string | null;
+  documentDate: string | null;
+  notes: string | null;
+  createdAt: string;
+  uploadedByFirstName: string | null;
+  uploadedByLastName: string | null;
+}
+
+export interface DocumentUpload {
+  file: File;
+  sourceInstitution?: string;
+  documentType?: string;
+  documentDate?: string;
+  notes?: string;
+}
+
+export const patientDocumentAPI = {
+  list: async (patientId: string): Promise<PatientDocument[]> => {
+    const response = await API.get<ApiResponse<PatientDocument[]>>(`patients/${patientId}/documents`);
+    return response.data.data ?? [];
+  },
+
+  upload: async (patientId: string, upload: DocumentUpload): Promise<PatientDocument> => {
+    const form = new FormData();
+    form.append("document", upload.file);
+    (["sourceInstitution", "documentType", "documentDate", "notes"] as const).forEach((key) => {
+      if (upload[key]) form.append(key, upload[key] as string);
+    });
+    const response = await API.post<ApiResponse<PatientDocument>>(`patients/${patientId}/documents`, form, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    if (!response.data.data) throw new Error(response.data.message ?? "Upload failed");
+    return response.data.data;
+  },
+
+  /** Files are only served through the authenticated API, so they're fetched as a blob for preview. */
+  fileBlob: async (patientId: string, documentId: string): Promise<Blob> => {
+    const response = await API.get(`patients/${patientId}/documents/${documentId}/file`, { responseType: "blob" });
+    return response.data as Blob;
+  },
+
+  remove: async (patientId: string, documentId: string): Promise<void> => {
+    await API.delete(`patients/${patientId}/documents/${documentId}`);
   },
 };

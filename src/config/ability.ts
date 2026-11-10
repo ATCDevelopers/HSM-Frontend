@@ -26,7 +26,8 @@ export type SubjectNames =
   | 'Billing'
   | 'Insurance'
   | 'Inventory'
-  | 'Report';
+  | 'Report'
+  | 'PatientBalance';
 
 export type Subjects = 'all' | SubjectNames;
 
@@ -64,6 +65,7 @@ const PERMISSION_MATRIX: Record<string, Partial<Record<Subjects, Actions[] | tru
     Laboratory: READ_ONLY,
     Pharmacy: READ_ONLY,
     Billing: READ_ONLY,
+    PatientBalance: READ_ONLY,
     Insurance: true,
     Inventory: true,
     Report: true,
@@ -74,6 +76,8 @@ const PERMISSION_MATRIX: Record<string, Partial<Record<Subjects, Actions[] | tru
     Consultation: READ_WRITE,
     Prescription: READ_WRITE,
     'Prescription-Items': READ_WRITE,
+    Medicine: READ_ONLY,
+    Vitals: READ_ONLY,
     Diagnosis: READ_ONLY,
     Lab_test: READ_ONLY,
     Laboratory: ['read', 'request'],
@@ -86,17 +90,22 @@ const PERMISSION_MATRIX: Record<string, Partial<Record<Subjects, Actions[] | tru
     Prescription: READ_ONLY,
     'Prescription-Items': READ_ONLY,
     Vitals: READ_WRITE,
+    Consultation: READ_ONLY,
+    Laboratory: READ_ONLY,
     Report: READ_ONLY,
   },
   Receptionist: {
     Patient: true,
     Appointment: true,
-    Billing: READ_ONLY,
+    PatientBalance: READ_ONLY,
     Report: READ_ONLY,
   },
   Pharmacist: {
     Patient: READ_ONLY,
     Pharmacy: true,
+    Medicine: true,
+    Prescription: ['read', 'update'],
+    'Prescription-Items': READ_ONLY,
     Inventory: true,
     Report: READ_ONLY,
   },
@@ -111,11 +120,14 @@ const PERMISSION_MATRIX: Record<string, Partial<Record<Subjects, Actions[] | tru
   Cashier: {
     Patient: READ_ONLY,
     Billing: true,
+    PatientBalance: READ_ONLY,
     Insurance: true,
     Report: READ_ONLY,
   },
   Accountant: {
+    Patient: READ_ONLY,
     Billing: true,
+    PatientBalance: READ_ONLY,
     Insurance: true,
     Inventory: true,
     Report: READ_ONLY,

@@ -39,6 +39,25 @@ const MedicalRecordsShow = lazy(
 const ConsultationForm = lazy(
   () => import("../pages/medical-records/ConsultationForm"),
 );
+const PrescriptionForm = lazy(() => import("../pages/medical-records/PrescriptionForm"));
+const Pharmacy = lazy(() => import("../pages/pharmacy/Index"));
+const PharmacyForm = lazy(() => import("../pages/pharmacy/Form"));
+const BillingIndex = lazy(() => import("../pages/billing/Index"));
+const BillingForm = lazy(() => import("../pages/billing/Form"));
+const BillingShow = lazy(() => import("../pages/billing/Show"));
+const BillingCharges = lazy(() => import("../pages/billing/Charges"));
+const PatientBalancePage = lazy(() => import("../pages/billing/PatientBalance"));
+const BillingServices = lazy(() => import("../pages/billing/Services"));
+const Departments = lazy(() => import("../pages/departments/Index"));
+const DepartmentShow = lazy(() => import("../pages/departments/Show"));
+const Reports = lazy(() => import("../pages/reports/Index"));
+const Settings = lazy(() => import("../pages/settings/Index"));
+const LaboratoryIndex = lazy(() => import("../pages/laboratory/Index"));
+const EnterLabResult = lazy(() => import("../pages/laboratory/EnterResult"));
+const LabResults = lazy(() => import("../pages/laboratory/Results"));
+const LabTestConfig = lazy(
+  () => import("../pages/laboratory/labTestConfig"),
+);
 
 const UsersIndex = lazy(() => import("../pages/users/Index"));
 const RegisterUser = lazy(() => import("../pages/users/Register"));
@@ -55,6 +74,7 @@ const ClinicManagerPortal = lazy(
 );
 const ReceptionPortal = lazy(() => import("../pages/users/ReceptionPortal"));
 const Notes = lazy(() => import("../pages/users/Notes"));
+const HeadsOfDepartment = lazy(() => import("../pages/users/HeadsOfDepartment"));
 
 const ResourceIndex = Index as ComponentType<{ resource: string }>;
 const ResourceShow = Show as ComponentType<{ resource: string }>;
@@ -104,9 +124,7 @@ function AppRoutes() {
           path="/dashboard"
           element={
             <ProtectedRoute>
-              <BaseLayout resourceName="Dashboard">
-                <Dashboard />
-              </BaseLayout>
+              <Dashboard />
             </ProtectedRoute>
           }
         />
@@ -277,6 +295,167 @@ function AppRoutes() {
           }
         />
 
+        <Route
+          path="/medical-records/prescriptions/new"
+          element={
+            <ProtectedRoute>
+              <PrescriptionForm />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Pharmacy: medicine catalogue and dispensing */}
+        <Route
+          path="/pharmacy"
+          element={
+            <ProtectedRoute>
+              <Pharmacy />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/pharmacy/new"
+          element={
+            <ProtectedRoute>
+              <PharmacyForm />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/pharmacy/:id/edit"
+          element={
+            <ProtectedRoute>
+              <PharmacyForm />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Billing */}
+        <Route
+          path="/billing"
+          element={
+            <ProtectedRoute>
+              <BillingIndex />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/billing/new"
+          element={
+            <ProtectedRoute>
+              <BillingForm />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/patient-balance"
+          element={
+            <ProtectedRoute>
+              <PatientBalancePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/billing/charges"
+          element={
+            <ProtectedRoute>
+              <BillingCharges />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/billing/services"
+          element={
+            <ProtectedRoute>
+              <BillingServices />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/billing/:id"
+          element={
+            <ProtectedRoute>
+              <BillingShow />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Administration */}
+        <Route
+          path="/departments"
+          element={
+            <ProtectedRoute>
+              <Departments />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/departments/:id"
+          element={
+            <ProtectedRoute>
+              <DepartmentShow />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/reports"
+          element={
+            <ProtectedRoute>
+              <Reports />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <Settings />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Laboratory test configuration and result submission */}
+        <Route
+          path="/laboratory"
+          element={
+            <ProtectedRoute>
+              <LaboratoryIndex />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/laboratory/results"
+          element={
+            <ProtectedRoute>
+              <LabResults />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/laboratory/results/new"
+          element={
+            <ProtectedRoute>
+              <EnterLabResult />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/laboratory/new"
+          element={
+            <ProtectedRoute>
+              <LabTestConfig />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/laboratory/:id/edit"
+          element={
+            <ProtectedRoute>
+              <LabTestConfig />
+            </ProtectedRoute>
+          }
+        />
+
         {/* Users */}
         <Route
           path="/users"
@@ -311,6 +490,14 @@ function AppRoutes() {
           }
         />
         <Route
+          path="/users/heads-of-department"
+          element={
+            <ProtectedRoute>
+              <HeadsOfDepartment />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/users/:id/edit"
           element={
             <ProtectedRoute>
@@ -330,9 +517,7 @@ function AppRoutes() {
           path="/users/nurse-portal"
           element={
             <ProtectedRoute>
-              <BaseLayout resourceName="Nurse Portal">
-                <NursePortal />
-              </BaseLayout>
+              <NursePortal />
             </ProtectedRoute>
           }
         />
@@ -340,9 +525,7 @@ function AppRoutes() {
           path="/users/pharmacy-portal"
           element={
             <ProtectedRoute>
-              <BaseLayout resourceName="Pharmacy Portal">
-                <PharmacyPortal />
-              </BaseLayout>
+              <PharmacyPortal />
             </ProtectedRoute>
           }
         />
@@ -350,9 +533,7 @@ function AppRoutes() {
           path="/users/lab-portal"
           element={
             <ProtectedRoute>
-              <BaseLayout resourceName="Lab Portal">
-                <LabPortal />
-              </BaseLayout>
+              <LabPortal />
             </ProtectedRoute>
           }
         />
@@ -360,9 +541,7 @@ function AppRoutes() {
           path="/users/admin-portal"
           element={
             <ProtectedRoute>
-              <BaseLayout resourceName="Admin Portal">
-                <AdminPortal />
-              </BaseLayout>
+              <AdminPortal />
             </ProtectedRoute>
           }
         />
@@ -370,9 +549,7 @@ function AppRoutes() {
           path="/users/accountant-portal"
           element={
             <ProtectedRoute>
-              <BaseLayout resourceName="Accountant Portal">
-                <AccountantPortal />
-              </BaseLayout>
+              <AccountantPortal />
             </ProtectedRoute>
           }
         />
@@ -380,9 +557,7 @@ function AppRoutes() {
           path="/users/clinic-manager-portal"
           element={
             <ProtectedRoute>
-              <BaseLayout resourceName="Clinic Manager Portal">
-                <ClinicManagerPortal />
-              </BaseLayout>
+              <ClinicManagerPortal />
             </ProtectedRoute>
           }
         />
@@ -390,9 +565,7 @@ function AppRoutes() {
           path="/users/reception-portal"
           element={
             <ProtectedRoute>
-              <BaseLayout resourceName="Reception Portal">
-                <ReceptionPortal />
-              </BaseLayout>
+              <ReceptionPortal />
             </ProtectedRoute>
           }
         />
@@ -406,6 +579,8 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+
+        
 
         {/* 404 */}
         <Route path="*" element={<NotFound />} />

@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import BaseLayout from "../../components/layouts/BaseLayout";
-import API from "../../services/api";
+import Swal from "sweetalert2";
+import { vitalsAPI } from "../../services/emrAPI";
+import { getErrorMessage } from "../../services/apiResponse";
 import StepWizard from "./StepWizard";
 import type { VitalsFormInput } from "./types";
 
@@ -193,9 +195,21 @@ export default function VitalsForm() {
         weight: Number(values.weight),
         height: Number(values.height),
       };
-      await API.post("vitals", payload);
+      await vitalsAPI.create({
+        patientId: payload.patient_id,
+        temperature: payload.temperature,
+        bloodPressureSystolic: payload.bp_systolic,
+        bloodPressureDiastolic: payload.bp_diastolic,
+        heartRate: payload.heart_rate,
+        respiratoryRate: payload.respiratory_rate,
+        oxygenSaturation: payload.oxygen_saturation,
+        weight: payload.weight,
+        height: payload.height,
+      });
       setSaved(true);
       setTimeout(goBackToHistory, 1200);
+    } catch (e: unknown) {
+      Swal.fire("Could not save vitals", getErrorMessage(e), "error");
     } finally {
       setSubmitting(false);
     }

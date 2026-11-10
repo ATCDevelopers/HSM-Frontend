@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { departmentAPI } from "../../services/departmentAPI";
 import { useNavigate, useParams } from "react-router-dom";
 import BaseLayout from "../../components/layouts/BaseLayout.tsx";
 import { userAPI, type User } from "../../services/userAPI";
@@ -11,9 +12,14 @@ export default function UserDetails() {
   const navigate = useNavigate();
   const { user: currentUser } = useAuth();
   const [user, setUser] = useState<User | null>(null);
+  const [departmentName, setDepartmentName] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
 
+  useEffect(() => {
+    if (!user?.departmentId) return setDepartmentName("");
+    departmentAPI.list().then((list) => setDepartmentName(list.find((d) => d.id === user.departmentId)?.name ?? "")).catch(() => undefined);
+  }, [user?.departmentId]);
   const canCreate = can("create", "User", currentUser?.role) || can("manage", "User", currentUser?.role);
   const canUpdate = can("update", "User", currentUser?.role) || can("manage", "User", currentUser?.role);
   const canDelete = can("delete", "User", currentUser?.role) || can("manage", "User", currentUser?.role);
@@ -103,6 +109,7 @@ export default function UserDetails() {
 
   const systemDetails: [string, string][] = [
     ["System Role", user.role],
+    ["Department", departmentName || "Not assigned"],
     ["Account Status", user.status || "ACTIVE"],
     ["Created Date", user.createdAt ? new Date(user.createdAt).toLocaleDateString() : "System Record"],
   ];

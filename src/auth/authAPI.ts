@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const BASE_URL = process.env.VITE_BACKEND_BASE_URL as string;
+const BASE_URL = import.meta.env.VITE_API_URL as string;
 
 export interface LoginPayload {
   email: string;
@@ -37,7 +37,7 @@ export interface LoginResponse {
 export function getRoleDashboard(role: UserRole | string): string {
   const map: Record<string, string> = {
     Admin: '/users/admin-portal',
-    Doctor: '/users/dashboard',
+    Doctor: '/dashboard',
     Nurse: '/users/nurse-portal',
     Receptionist: '/users/reception-portal',
     Pharmacist: '/users/pharmacy-portal',

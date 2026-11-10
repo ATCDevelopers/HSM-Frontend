@@ -5,6 +5,7 @@ import { patientAPI, type Patient } from "../../services/patientAPI";
 import { useAuth } from "../../auth/AuthContext";
 import { can } from "../../config/ability";
 import Swal from "sweetalert2";
+import PatientDocuments from "../../components/sections/PatientDocuments";
 
 export default function PatientsDetails() {
   const { id } = useParams();
@@ -203,6 +204,14 @@ export default function PatientsDetails() {
                   Edit / Update
                 </button>
               )}
+              {can("read", "PatientBalance", user?.role) && (
+                <button
+                  onClick={() => navigate(`/patient-balance?patientId=${patient.id}`)}
+                  className="rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700"
+                >
+                  Check balance
+                </button>
+              )}
               {canCreate && (
                 <button
                   onClick={() => navigate("/patients/register")}
@@ -221,6 +230,9 @@ export default function PatientsDetails() {
               )}
             </div>
           </div>
+        </div>
+        <div className="mt-6">
+          <PatientDocuments patientId={patient.id} />
         </div>
       </div>
     </BaseLayout>

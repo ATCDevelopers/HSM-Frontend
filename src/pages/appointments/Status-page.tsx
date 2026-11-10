@@ -1,318 +1,187 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import {
-  ClockIcon,
-  ArrowPathIcon,
-  CheckCircleIcon,
-  XCircleIcon,
-  CalendarDaysIcon,
-} from '@heroicons/react/24/outline';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import Swal from 'sweetalert2';
 import BaseLayout from '../../components/layouts/BaseLayout';
-import Select from '../../components/atoms/forms/Select';
-import Input from '../../components/atoms/forms/Input';
-import Button from '../../components/atoms/ui/Button';
-import Badge from '../../components/atoms/ui/Badge';
+import { useAuth } from '../../auth/AuthContext';
+import { can } from '../../config/ability';
+import { getErrorMessage } from '../../services/apiResponse';
 import {
-  getAppointmentReports,
-  updateAppointmentStatus,
-  cancelAppointment,
+  appointmentAPI,
   type Appointment,
   type AppointmentStatus,
+  STATUS_LABELS,
+  STATUS_STYLES,
+  STATUS_TRANSITIONS,
+  doctorName,
+  patientName,
+  toDateKey,
 } from '../../services/appointmentAPI';
-import Swal from 'sweetalert2';
+import SlotPicker from './SlotPicker';
 
-// ─── Status lifecycle ─────────────────────────────────────────────────────────
-const TRANSITIONS: Record<AppointmentStatus, AppointmentStatus[]> = {
-  scheduled:  ['confirmed', 'checked_in', 'cancelled', 'no_show'],
-  confirmed:  ['checked_in', 'cancelled', 'no_show'],
-  checked_in: ['completed', 'cancelled'],
-  completed:  [],
-  cancelled:  [],
-  no_show:    [],
+const ACTION_LABELS: Partial<Record<AppointmentStatus, string>> = {
+  confirmed: 'Confirm',
+  checked_in: 'Check in',
+  completed: 'Mark completed',
+  no_show: 'Mark no-show',
 };
 
-const STATUS_BADGE: Record<string, { variant: any; label: string }> = {
-  scheduled:  { variant: 'info',    label: 'Scheduled'  },
-  confirmed:  { variant: 'primary', label: 'Confirmed'  },
-  checked_in: { variant: 'warning', label: 'Checked In' },
-  completed:  { variant: 'success', label: 'Completed'  },
-  cancelled:  { variant: 'danger',  label: 'Cancelled'  },
-  no_show:    { variant: 'default', label: 'No Show'    },
-};
-
-const STATUS_ICON: Record<string, React.FC<any>> = {
-  scheduled:  CalendarDaysIcon,
-  confirmed:  CheckCircleIcon,
-  checked_in: ArrowPathIcon,
-  completed:  CheckCircleIcon,
-  cancelled:  XCircleIcon,
-  no_show:    XCircleIcon,
-};
-
-const fmtDate = (d: string) =>
-  d ? new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }) : '—';
-
-// ─── Component ────────────────────────────────────────────────────────────────
 export const AppointmentStatusPage: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+  const { id = '' } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const canUpdate = can('update', 'Appointment', user?.role);
 
   const [appointment, setAppointment] = useState<Appointment | null>(null);
-  const [loading, setLoading]         = useState(true);
-  const [error, setError]             = useState('');
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [rescheduling, setRescheduling] = useState(false);
+  const [newDate, setNewDate] = useState(toDateKey(new Date()));
+  const [newTime, setNewTime] = useState('');
 
-  const [newStatus, setNewStatus]   = useState<AppointmentStatus | ''>('');
-  const [reason, setReason]         = useState('');
-  const [updating, setUpdating]     = useState(false);
-
-  // ── Load appointment ──────────────────────────────────────────────────────
-  useEffect(() => {
-    if (!id) return;
-    // Reports endpoint supports filtering by id via a report look-up
-    // We get all then find by id (no dedicated GET /appointments/:id on frontend routes)
-    getAppointmentReports()
-      .then(all => {
-        const found = all.find(a => a.id === id) ?? null;
-        setAppointment(found);
-        if (!found) setError('Appointment not found.');
-      })
-      .catch((err: unknown) =>
-        setError(err instanceof Error ? err.message : 'Failed to load appointment')
-      )
-      .finally(() => setLoading(false));
+  const load = useCallback(() => {
+    appointmentAPI
+      .get(id)
+      .then(setAppointment)
+      .catch((e: unknown) => setError(getErrorMessage(e, 'Failed to load appointment')));
   }, [id]);
 
-  const currentStatus = appointment?.status as AppointmentStatus | undefined;
-  const allowedTransitions = currentStatus ? TRANSITIONS[currentStatus] : [];
-  const isTerminal = currentStatus && allowedTransitions.length === 0;
+  useEffect(load, [load]);
 
-  const statusOptions = allowedTransitions.map(s => ({
-    value: s,
-    label: STATUS_BADGE[s]?.label ?? s,
-  }));
-
-  // ── Submit status update ──────────────────────────────────────────────────
-  async function handleUpdate() {
-    if (!appointment || !newStatus) return;
-    const requiresReason = newStatus === 'cancelled';
-    if (requiresReason && !reason.trim()) {
-      return Swal.fire('Reason Required', 'A reason is required to cancel an appointment.', 'warning');
-    }
-
-    setUpdating(true);
+  const run = async (action: () => Promise<unknown>, success: string) => {
+    setBusy(true);
+    setError('');
     try {
-      let updated: Appointment;
-      if (newStatus === 'cancelled') {
-        updated = await cancelAppointment(appointment.id, reason.trim());
-      } else {
-        updated = await updateAppointmentStatus(appointment.id, newStatus, reason.trim() || undefined);
-      }
-      setAppointment(prev => prev ? { ...prev, status: updated.status } : prev);
-      setNewStatus('');
-      setReason('');
-      await Swal.fire({
-        title: 'Status Updated',
-        text: `Appointment is now "${STATUS_BADGE[updated.status]?.label ?? updated.status}".`,
-        icon: 'success',
-        timer: 2000,
-        showConfirmButton: false,
-      });
-    } catch (err: unknown) {
-      Swal.fire('Error', err instanceof Error ? err.message : 'Failed to update status', 'error');
+      await action();
+      Swal.fire({ title: success, icon: 'success', timer: 1200, showConfirmButton: false });
+      load();
+    } catch (e: unknown) {
+      setError(getErrorMessage(e, 'Action failed'));
     } finally {
-      setUpdating(false);
+      setBusy(false);
     }
+  };
+
+  const cancel = async () => {
+    const { value: reason } = await Swal.fire({
+      title: 'Cancel appointment',
+      input: 'text',
+      inputLabel: 'Reason (kept in the audit log)',
+      showCancelButton: true,
+      confirmButtonText: 'Cancel appointment',
+      confirmButtonColor: '#d33',
+      inputValidator: (v) => (!v?.trim() ? 'A reason is required' : undefined),
+    });
+    if (reason) run(() => appointmentAPI.cancel(id, reason.trim()), 'Appointment cancelled');
+  };
+
+  const reschedule = () => {
+    if (!newTime) {
+      setError('Pick a new time slot.');
+      return;
+    }
+    run(async () => {
+      await appointmentAPI.reschedule(id, { appointmentDate: newDate, appointmentTime: newTime });
+      setRescheduling(false);
+      setNewTime('');
+    }, 'Appointment rescheduled');
+  };
+
+  if (!appointment) {
+    return (
+      <BaseLayout resourceName="Appointment Status">
+        <div className="rounded-2xl bg-white p-8 text-sm text-gray-500 shadow-sm">{error || 'Loading appointment...'}</div>
+      </BaseLayout>
+    );
   }
 
-  // ── Lifecycle stepper data ────────────────────────────────────────────────
-  const steps: AppointmentStatus[] = ['scheduled', 'confirmed', 'checked_in', 'completed'];
-  const stepIdx = currentStatus ? steps.indexOf(currentStatus) : -1;
+  const next = STATUS_TRANSITIONS[appointment.status].filter((s) => s !== 'cancelled');
+  const isOpen = STATUS_TRANSITIONS[appointment.status].length > 0;
 
   return (
-    <BaseLayout resourceName="Appointments">
-      <div className="w-full min-h-[calc(100vh-6rem)] rounded-2xl bg-blue-50 p-4 sm:p-6 flex flex-col gap-5">
+    <BaseLayout resourceName="Appointment Status">
+      <div className="mx-auto w-full max-w-4xl space-y-6">
+        <Link to="/appointments" className="text-sm font-semibold text-blue-600 hover:text-blue-700">← Back to appointments</Link>
 
-        {/* ── Header ─────────────────────────────────────────────────────── */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-widest text-blue-600">Status Update</p>
-            <h2 className="mt-1 text-2xl font-bold text-gray-900">Appointment Details</h2>
-            <p className="mt-0.5 text-sm text-gray-500">Review and update the appointment lifecycle status.</p>
-          </div>
-          <Button variant="outline" size="sm" onClick={() => navigate('/appointments/history')}>
-            ← Back to History
-          </Button>
-        </div>
-
-        {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-200 border-t-blue-600" />
-          </div>
-        ) : error ? (
-          <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-8 text-center text-sm text-red-600">
-            {error}
-          </div>
-        ) : appointment && (
-          <div className="grid gap-5 xl:grid-cols-[1fr_1fr]">
-
-            {/* ── Left — Appointment info ──────────────────────────────── */}
-            <div className="flex flex-col gap-4">
-
-              {/* Status badge */}
-              <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-5 flex items-center gap-4">
-                {(() => {
-                  const Icon = STATUS_ICON[appointment.status] ?? ClockIcon;
-                  const b = STATUS_BADGE[appointment.status] ?? { variant: 'default', label: appointment.status };
-                  return (
-                    <>
-                      <div className={`h-14 w-14 rounded-2xl flex items-center justify-center ${
-                        appointment.status === 'completed' ? 'bg-green-100 text-green-700'
-                        : appointment.status === 'cancelled' ? 'bg-red-100 text-red-700'
-                        : appointment.status === 'checked_in' ? 'bg-amber-100 text-amber-700'
-                        : 'bg-blue-100 text-blue-700'
-                      }`}>
-                        <Icon className="h-7 w-7" />
-                      </div>
-                      <div>
-                        <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider">Current Status</p>
-                        <Badge variant={b.variant} size="lg" className="mt-1">{b.label}</Badge>
-                      </div>
-                    </>
-                  );
-                })()}
-              </div>
-
-              {/* Lifecycle stepper */}
-              {!['cancelled', 'no_show'].includes(appointment.status) && (
-                <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-5">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-4">Lifecycle</p>
-                  <div className="flex items-center gap-0">
-                    {steps.map((step, i) => {
-                      const done = stepIdx > i;
-                      const active = stepIdx === i;
-                      return (
-                        <React.Fragment key={step}>
-                          <div className="flex flex-col items-center gap-1.5 flex-1">
-                            <div className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-bold border-2 transition ${
-                              done   ? 'border-green-500 bg-green-500 text-white'
-                              : active ? 'border-blue-600 bg-blue-600 text-white'
-                              : 'border-gray-200 bg-white text-gray-400'
-                            }`}>
-                              {done ? '✓' : i + 1}
-                            </div>
-                            <p className={`text-[10px] font-semibold capitalize text-center ${
-                              active ? 'text-blue-600' : done ? 'text-green-600' : 'text-gray-400'
-                            }`}>
-                              {STATUS_BADGE[step]?.label ?? step}
-                            </p>
-                          </div>
-                          {i < steps.length - 1 && (
-                            <div className={`h-0.5 flex-1 ${done ? 'bg-green-400' : 'bg-gray-200'}`} />
-                          )}
-                        </React.Fragment>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* Appointment details card */}
-              <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-5 flex flex-col gap-3">
-                <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">Appointment Details</p>
-                {[
-                  { label: 'Patient',   value: `${appointment.patientFirstName ?? ''} ${appointment.patientLastName ?? ''}` },
-                  { label: 'Doctor',    value: appointment.doctorFirstName ? `Dr. ${appointment.doctorFirstName} ${appointment.doctorLastName}` : 'Not assigned' },
-                  { label: 'Type',      value: appointment.appointmentType },
-                  { label: 'Date',      value: fmtDate(appointment.appointmentDate) },
-                  { label: 'Time',      value: appointment.appointmentTime },
-                  { label: 'Priority',  value: appointment.priority },
-                  { label: 'Reason',    value: appointment.reason },
-                ].map(({ label, value }) => (
-                  <div key={label} className="flex justify-between items-start gap-3 border-b border-gray-50 pb-2 last:border-0 last:pb-0">
-                    <span className="text-xs font-medium text-gray-400 shrink-0">{label}</span>
-                    <span className="text-sm text-gray-800 text-right capitalize">{value}</span>
-                  </div>
-                ))}
-              </div>
+        <section className="rounded-3xl bg-white p-5 shadow-sm ring-1 ring-gray-100 sm:p-8">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <p className="text-sm text-gray-500">Appointment</p>
+              <h1 className="text-2xl font-bold text-gray-900">{patientName(appointment)}</h1>
+              <p className="mt-1 text-sm text-gray-500">with Dr. {doctorName(appointment)}</p>
             </div>
-
-            {/* ── Right — Status update form ───────────────────────────── */}
-            <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-5 flex flex-col gap-4 h-fit">
-              <div>
-                <h3 className="font-bold text-gray-900">Update Status</h3>
-                <p className="text-xs text-gray-500 mt-0.5">
-                  {isTerminal
-                    ? `Status "${STATUS_BADGE[currentStatus!]?.label}" is a terminal state — no further transitions are allowed.`
-                    : 'Select the next status from the allowed transitions.'}
-                </p>
-              </div>
-
-              {isTerminal ? (
-                <div className="rounded-xl bg-gray-50 border border-dashed border-gray-200 py-8 text-center">
-                  <XCircleIcon className="mx-auto h-8 w-8 text-gray-300" />
-                  <p className="mt-2 text-sm text-gray-400">This appointment is in a terminal state.</p>
-                </div>
-              ) : (
-                <>
-                  <Select
-                    label="New Status"
-                    required
-                    options={statusOptions}
-                    value={newStatus}
-                    onChange={v => setNewStatus(v as AppointmentStatus)}
-                    placeholder="Select next status…"
-                  />
-
-                  {(newStatus === 'cancelled' || newStatus) && (
-                    <Input
-                      label={newStatus === 'cancelled' ? 'Cancellation Reason (required)' : 'Reason (optional)'}
-                      required={newStatus === 'cancelled'}
-                      value={reason}
-                      onChange={e => setReason(e.target.value)}
-                      placeholder={newStatus === 'cancelled' ? 'Explain why this appointment is being cancelled…' : 'Optional notes…'}
-                    />
-                  )}
-
-                  <div className="pt-1">
-                    <Button
-                      variant="primary"
-                      loading={updating}
-                      disabled={!newStatus}
-                      onClick={handleUpdate}
-                      className="w-full justify-center"
-                    >
-                      Update Status
-                    </Button>
-                  </div>
-
-                  {/* Quick action tiles */}
-                  <div className="pt-2 border-t border-gray-100">
-                    <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">Quick Transitions</p>
-                    <div className="grid grid-cols-2 gap-2">
-                      {allowedTransitions.map(s => {
-                        const b = STATUS_BADGE[s];
-                        return (
-                          <button
-                            key={s}
-                            type="button"
-                            onClick={() => setNewStatus(s)}
-                            className={`rounded-xl border px-3 py-2.5 text-xs font-semibold text-left transition ${
-                              newStatus === s
-                                ? 'border-blue-400 bg-blue-50 text-blue-700'
-                                : 'border-gray-200 bg-gray-50 text-gray-600 hover:border-blue-300 hover:bg-blue-50/50'
-                            }`}
-                          >
-                            {b?.label ?? s}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-
+            <span className={`self-start rounded-full px-3 py-1 text-sm font-semibold ${STATUS_STYLES[appointment.status]}`}>{STATUS_LABELS[appointment.status]}</span>
           </div>
+
+          <dl className="mt-6 grid gap-4 text-sm sm:grid-cols-2">
+            {[
+              ['Date', toDateKey(new Date(appointment.appointmentDate))],
+              ['Time', appointment.appointmentTime],
+              ['Type', appointment.appointmentType],
+              ['Priority', appointment.priority],
+              ['Reason', appointment.reason],
+            ].map(([label, value]) => (
+              <div key={label} className="rounded-xl bg-gray-50 p-3">
+                <dt className="text-xs uppercase tracking-wider text-gray-400">{label}</dt>
+                <dd className="mt-1 font-medium capitalize text-gray-900">{value}</dd>
+              </div>
+            ))}
+          </dl>
+
+          {error && <div className="mt-6 rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</div>}
+
+          {canUpdate && isOpen && (
+            <div className="mt-6 flex flex-wrap gap-2">
+              {next.map((status) => (
+                <button
+                  key={status}
+                  type="button"
+                  disabled={busy}
+                  onClick={() => run(() => appointmentAPI.updateStatus(id, status), `Marked ${STATUS_LABELS[status].toLowerCase()}`)}
+                  className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
+                >
+                  {ACTION_LABELS[status] ?? STATUS_LABELS[status]}
+                </button>
+              ))}
+              {appointment.status !== 'checked_in' && (
+                <button type="button" disabled={busy} onClick={() => setRescheduling((v) => !v)} className="rounded-xl border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50">
+                  Reschedule
+                </button>
+              )}
+              <button type="button" disabled={busy} onClick={cancel} className="rounded-xl border border-red-200 px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-50">
+                Cancel appointment
+              </button>
+            </div>
+          )}
+
+          {appointment.status === 'checked_in' && can('write', 'Consultation', user?.role) && (
+            <button
+              type="button"
+              onClick={() => navigate(`/medical-records/consultations/new?patientId=${appointment.patientId}`)}
+              className="mt-4 rounded-xl bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700"
+            >
+              Start consultation
+            </button>
+          )}
+        </section>
+
+        {rescheduling && appointment.doctorId && (
+          <section className="space-y-4 rounded-3xl bg-white p-5 shadow-sm ring-1 ring-gray-100 sm:p-8">
+            <h2 className="text-lg font-bold text-gray-900">Reschedule</h2>
+            <input
+              type="date"
+              min={toDateKey(new Date())}
+              value={newDate}
+              onChange={(e) => {
+                setNewDate(e.target.value);
+                setNewTime('');
+              }}
+              className="rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none"
+            />
+            <SlotPicker doctorId={appointment.doctorId} date={newDate} value={newTime} onChange={setNewTime} />
+            <button type="button" disabled={busy} onClick={reschedule} className="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60">
+              Confirm new time
+            </button>
+          </section>
         )}
       </div>
     </BaseLayout>

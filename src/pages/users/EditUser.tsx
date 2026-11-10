@@ -1,4 +1,5 @@
 import { ChangeEvent, FormEvent, useEffect, useState } from "react";
+import { departmentAPI, type Department } from "../../services/departmentAPI";
 import { useNavigate, useParams } from "react-router-dom";
 import BaseLayout from "../../components/layouts/BaseLayout.tsx";
 import { userAPI, type User } from "../../services/userAPI";
@@ -32,6 +33,7 @@ export default function EditUser() {
     email: string;
     phoneNumber: string;
     role: string;
+    departmentId: string;
     status: "ACTIVE" | "INACTIVE";
     imagePath: string;
     password?: string;
@@ -42,10 +44,16 @@ export default function EditUser() {
     email: "",
     phoneNumber: "",
     role: "Doctor",
+    departmentId: "",
     status: "ACTIVE",
     imagePath: "",
     password: "",
   });
+  const [departments, setDepartments] = useState<Department[]>([]);
+
+  useEffect(() => {
+    departmentAPI.list().then(setDepartments).catch(() => undefined);
+  }, []);
 
   useEffect(() => {
     if (!id) return;
@@ -60,6 +68,7 @@ export default function EditUser() {
           email: u.email || "",
           phoneNumber: u.phoneNumber || "",
           role: u.role || "Doctor",
+          departmentId: u.departmentId || "",
           status: (u.status as "ACTIVE" | "INACTIVE") || "ACTIVE",
           imagePath: u.imagePath || u.photo || "",
           password: "",
@@ -117,6 +126,7 @@ export default function EditUser() {
         email: formData.email,
         phoneNumber: formData.phoneNumber,
         role: formData.role,
+        departmentId: formData.departmentId || null,
         status: formData.status,
         imagePath: formData.imagePath || null,
       };
@@ -270,6 +280,23 @@ export default function EditUser() {
                       {ROLES.map((r) => (
                         <option key={r.value} value={r.value}>
                           {r.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label className="text-sm font-medium text-gray-700">
+                    Department
+                    <select
+                      name="departmentId"
+                      value={formData.departmentId}
+                      onChange={handleChange}
+                      className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm font-normal outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                    >
+                      <option value="">No department</option>
+                      {departments.map((d) => (
+                        <option key={d.id} value={d.id}>
+                          {d.name}
                         </option>
                       ))}
                     </select>

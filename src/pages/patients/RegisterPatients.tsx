@@ -18,6 +18,7 @@ export default function RegisterPatient() {
       phoneNumber: "",
       email: "",
       nhifCard: "",
+      paymentMode: "NHIF",
       nationalId: "",
       photoUrl: "",
     },
@@ -81,9 +82,9 @@ export default function RegisterPatient() {
       !patient.bloodGroup ||
       !patient.phoneNumber ||
       !patient.email ||
-      !patient.nhifCard
+      (patient.paymentMode !== "CASH" && !patient.nhifCard.trim())
     ) {
-      setError("Please fill in all mandatory personal details (Name, Gender, DOB, Blood Group, Phone, Email, NHIF Card).");
+      setError(`Please fill in all mandatory personal details (Name, Gender, DOB, Blood Group, Phone, Email${patient.paymentMode === "CASH" ? "" : ", card number"}).`);
       Swal.fire("Missing Information", "Please complete all mandatory personal fields.", "warning");
       return;
     }
@@ -96,7 +97,9 @@ export default function RegisterPatient() {
 
     setSubmitting(true);
     try {
-      await patientAPI.create(formData);
+      await patientAPI.create(
+        patient.paymentMode === "CASH" ? { ...formData, patient: { ...patient, nhifCard: "" } } : formData,
+      );
       await Swal.fire({
         title: "Patient Registered!",
         text: `${patient.firstName} ${patient.lastName} has been registered successfully.`,
@@ -267,17 +270,37 @@ export default function RegisterPatient() {
                   </label>
 
                   <label className="text-sm font-medium text-gray-700">
-                    NHIF Card Number <span className="text-red-500">*</span>
-                    <input
-                      type="text"
-                      name="nhifCard"
-                      value={formData.patient.nhifCard}
+                    Payment type <span className="text-red-500">*</span>
+                    <select
+                      name="paymentMode"
+                      value={formData.patient.paymentMode}
                       onChange={handlePatientChange}
-                      required
-                      placeholder="NHIF Card Number"
                       className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm font-normal outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-                    />
+                    >
+                      <option value="NHIF">NHIF card</option>
+                      <option value="INSURANCE">Private health insurance</option>
+                      <option value="CASH">Cash (no insurance)</option>
+                    </select>
                   </label>
+
+                  {formData.patient.paymentMode === "CASH" ? (
+                    <p className="self-end rounded-lg bg-amber-50 p-3 text-xs text-amber-800">
+                      Cash patients pay a registration (account opening) fee. It is added to their bill automatically.
+                    </p>
+                  ) : (
+                    <label className="text-sm font-medium text-gray-700">
+                      {formData.patient.paymentMode === "NHIF" ? "NHIF card number" : "Insurance card number"} <span className="text-red-500">*</span>
+                      <input
+                        type="text"
+                        name="nhifCard"
+                        value={formData.patient.nhifCard}
+                        onChange={handlePatientChange}
+                        required
+                        placeholder={formData.patient.paymentMode === "NHIF" ? "NHIF card number" : "Insurance card / member number"}
+                        className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm font-normal outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                      />
+                    </label>
+                  )}
 
                   <label className="text-sm font-medium text-gray-700">
                     National ID

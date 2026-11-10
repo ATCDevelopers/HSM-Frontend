@@ -1,21 +1,18 @@
-import API from './api';
+import API from "./api";
+import { extractList, extractRecord } from "./apiResponse";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-export type AppointmentStatus =
-  | 'scheduled'
-  | 'confirmed'
-  | 'checked_in'
-  | 'completed'
-  | 'cancelled'
-  | 'no_show';
-
-export type AppointmentPriority = 'low' | 'medium' | 'high' | 'emergency';
+export type AppointmentStatus = "scheduled" | "confirmed" | "checked_in" | "completed" | "cancelled" | "no_show";
+export type AppointmentPriority = "low" | "medium" | "high" | "emergency";
 
 export interface Appointment {
   id: string;
   patientId: string;
-  doctorId?: string | null;
+  patientFirstName: string | null;
+  patientLastName: string | null;
+  patientEmail?: string | null;
+  doctorId: string | null;
+  doctorFirstName: string | null;
+  doctorLastName: string | null;
   appointmentType: string;
   priority: AppointmentPriority;
   status: AppointmentStatus;
@@ -23,33 +20,14 @@ export interface Appointment {
   appointmentDate: string;
   appointmentTime: string;
   createdAt?: string;
-  updatedAt?: string;
-  // joined fields (from reports endpoint)
-  patientFirstName?: string;
-  patientLastName?: string;
-  patientEmail?: string;
-  doctorFirstName?: string;
-  doctorLastName?: string;
 }
 
-export interface ComputedSlot {
-  date: string;
-  time: string;
-  status: 'available' | 'booked' | 'blocked';
-}
-
-export interface DoctorScheduleInput {
-  dayOfWeek: number;
-  startTime: string;
-  endTime: string;
-  slotDurationMinutes?: number;
-  isWorkingDay?: boolean;
-}
-
-export interface DoctorLeaveInput {
-  startDate: string;
-  endDate: string;
-  reason?: string;
+export interface AppointmentFilters {
+  doctorId?: string;
+  patientId?: string;
+  startDate?: string;
+  endDate?: string;
+  status?: AppointmentStatus;
 }
 
 export interface BookAppointmentPayload {
@@ -62,88 +40,124 @@ export interface BookAppointmentPayload {
   appointmentTime: string;
 }
 
-export interface ReschedulePayload {
-  appointmentDate: string;
-  appointmentTime: string;
-  doctorId?: string;
+export interface Slot {
+  date: string;
+  time: string;
+  status: "available" | "booked" | "blocked";
 }
 
-export interface AppointmentReportFilters {
-  doctorId?: string;
-  patientId?: string;
-  startDate?: string;
-  endDate?: string;
-  status?: AppointmentStatus;
+export interface DoctorSchedule {
+  dayOfWeek: number;
+  startTime: string;
+  endTime: string;
+  slotDurationMinutes?: number;
+  isWorkingDay?: boolean;
 }
 
-// ─── API Calls ────────────────────────────────────────────────────────────────
+export interface DoctorLeave {
+  startDate: string;
+  endDate: string;
+  reason?: string;
+}
 
-/** GET /doctors/:doctorId/availability?startDate=&endDate= */
-export const getDoctorAvailability = async (
-  doctorId: string,
-  startDate: string,
-  endDate: string
-): Promise<{ doctorId: string; startDate: string; endDate: string; slots: ComputedSlot[] }> => {
-  const res = await API.get(`/doctors/${doctorId}/availability`, {
-    params: { startDate, endDate },
-  });
-  return res.data.data;
+/** Forward moves the backend allows from each status (mirrors APPOINTMENT_STATUS_TRANSITIONS). */
+export const STATUS_TRANSITIONS: Record<AppointmentStatus, AppointmentStatus[]> = {
+  scheduled: ["confirmed", "checked_in", "cancelled", "no_show"],
+  confirmed: ["checked_in", "cancelled", "no_show"],
+  checked_in: ["completed", "cancelled"],
+  completed: [],
+  cancelled: [],
+  no_show: [],
 };
 
-/** POST /doctors/:doctorId/schedules */
-export const setDoctorSchedule = async (
-  doctorId: string,
-  schedules: DoctorScheduleInput[],
-  leaves?: DoctorLeaveInput[]
-): Promise<any> => {
-  const res = await API.post(`/doctors/${doctorId}/schedules`, { schedules, leaves });
-  return res.data.data;
+export const STATUS_LABELS: Record<AppointmentStatus, string> = {
+  scheduled: "Scheduled",
+  confirmed: "Confirmed",
+  checked_in: "Checked in",
+  completed: "Completed",
+  cancelled: "Cancelled",
+  no_show: "No show",
 };
 
-/** POST /appointments */
-export const bookAppointment = async (payload: BookAppointmentPayload): Promise<Appointment> => {
-  const res = await API.post('/appointments', payload);
-  return res.data.data;
+export const STATUS_STYLES: Record<AppointmentStatus, string> = {
+  scheduled: "bg-blue-100 text-blue-700",
+  confirmed: "bg-indigo-100 text-indigo-700",
+  checked_in: "bg-yellow-100 text-yellow-700",
+  completed: "bg-green-100 text-green-700",
+  cancelled: "bg-red-100 text-red-700",
+  no_show: "bg-gray-200 text-gray-700",
 };
 
-/** PUT /appointments/:id/reschedule */
-export const rescheduleAppointment = async (
-  appointmentId: string,
-  payload: ReschedulePayload
-): Promise<Appointment> => {
-  const res = await API.put(`/appointments/${appointmentId}/reschedule`, payload);
-  return res.data.data;
+export const patientName = (a: Pick<Appointment, "patientFirstName" | "patientLastName">) =>
+  [a.patientFirstName, a.patientLastName].filter(Boolean).join(" ") || "Unknown patient";
+
+export const doctorName = (a: Pick<Appointment, "doctorFirstName" | "doctorLastName">) =>
+  [a.doctorFirstName, a.doctorLastName].filter(Boolean).join(" ") || "Unassigned";
+
+/** YYYY-MM-DD in local time, the format every appointment endpoint accepts. */
+export const toDateKey = (date: Date) =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+
+export interface Doctor {
+  id: string;
+  firstName: string;
+  lastName: string;
+  departmentId?: string | null;
+  availability?: string;
+}
+
+/** "Dr. Jane Doe" plus a hint when the doctor isn't available right now. */
+export const doctorLabel = (d: Doctor) => {
+  const hint = { busy: "busy", on_leave: "on leave", off_duty: "off duty" }[d.availability ?? ""];
+  return `Dr. ${d.firstName} ${d.lastName}${hint ? ` (${hint})` : ""}`;
 };
 
-/** PATCH /appointments/:id/cancel */
-export const cancelAppointment = async (
-  appointmentId: string,
-  reason: string
-): Promise<Appointment> => {
-  const res = await API.patch(`/appointments/${appointmentId}/cancel`, { reason });
-  return res.data.data;
+export const appointmentAPI = {
+  doctors: async (): Promise<Doctor[]> => extractList<Doctor>(await API.get("doctors")),
+
+  /** Backed by /appointments/reports, which is the only appointment listing endpoint. */
+  list: async (filters: AppointmentFilters = {}): Promise<Appointment[]> => {
+    const response = await API.get("appointments/reports", { params: filters });
+    return extractList<Appointment>(response).sort((a, b) =>
+      `${a.appointmentDate}${a.appointmentTime}`.localeCompare(`${b.appointmentDate}${b.appointmentTime}`),
+    );
+  },
+
+  get: async (id: string): Promise<Appointment> => {
+    const record = extractRecord<Appointment>(await API.get(`appointments/${id}`));
+    if (!record) throw new Error("Appointment not found");
+    return record;
+  },
+
+  book: async (payload: BookAppointmentPayload) =>
+    extractRecord<Appointment>(await API.post("appointments", payload)),
+
+  reschedule: async (id: string, payload: { appointmentDate: string; appointmentTime: string; doctorId?: string }) =>
+    extractRecord<Appointment>(await API.put(`appointments/${id}/reschedule`, payload)),
+
+  cancel: async (id: string, reason: string) =>
+    extractRecord<Appointment>(await API.patch(`appointments/${id}/cancel`, { reason })),
+
+  updateStatus: async (id: string, status: AppointmentStatus, reason?: string) =>
+    extractRecord<Appointment>(await API.patch(`appointments/${id}/status`, { status, reason })),
+
+  sendReminders: async () => extractList(await API.post("appointments/send-reminders")),
+
+  availability: async (doctorId: string, startDate: string, endDate: string): Promise<Slot[]> => {
+    const response = await API.get(`doctors/${doctorId}/availability`, { params: { startDate, endDate } });
+    return extractRecord<{ slots: Slot[] }>(response)?.slots ?? [];
+  },
+
+  getSchedule: async (doctorId: string) =>
+    extractRecord<{ schedules: DoctorSchedule[]; leaves: DoctorLeave[] }>(await API.get(`doctors/${doctorId}/schedules`)) ?? {
+      schedules: [],
+      leaves: [],
+    },
+
+  saveSchedule: async (doctorId: string, schedules: DoctorSchedule[], leaves: DoctorLeave[] = []) =>
+    extractRecord(await API.post(`doctors/${doctorId}/schedules`, { schedules, leaves })),
 };
 
-/** PATCH /appointments/:id/status */
-export const updateAppointmentStatus = async (
-  appointmentId: string,
-  status: AppointmentStatus,
-  reason?: string
-): Promise<Appointment> => {
-  const res = await API.patch(`/appointments/${appointmentId}/status`, { status, reason });
-  return res.data.data;
-};
-
-/** GET /appointments/reports */
-export const getAppointmentReports = async (
-  filters: AppointmentReportFilters = {}
-): Promise<Appointment[]> => {
-  const res = await API.get('/appointments/reports', { params: filters });
-  return res.data.data;
-};
-
-/** POST /appointments/send-reminders */
-export const sendReminders = async (): Promise<any> => {
-  const res = await API.post('/appointments/send-reminders');
-  return res.data.data;
-};
+// Used by the Appointment Reports page (pages/appointments/Reports.tsx) from develop.
+export type AppointmentReportFilters = AppointmentFilters;
+export const getAppointmentReports = (filters: AppointmentReportFilters = {}) => appointmentAPI.list(filters);

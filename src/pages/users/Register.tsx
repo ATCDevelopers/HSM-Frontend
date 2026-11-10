@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { departmentAPI, departmentForRole, type Department } from "../../services/departmentAPI";
 import { useNavigate } from "react-router-dom";
 import BaseLayout from "../../components/layouts/BaseLayout.tsx";
 import Input from "../../components/atoms/forms/Input";
@@ -15,6 +16,7 @@ type RegisterForm = {
   phoneNumber: string;
   password: string;
   role: string;
+  departmentId: string;
   imagePath?: string;
 };
 
@@ -28,7 +30,6 @@ const ROLES = [
   { value: "Cashier", label: "Cashier" },
   { value: "ClinicManager", label: "Clinic Manager" },
   { value: "Accountant", label: "Accountant" },
-  { value: "Patient", label: "Patient" },
 ];
 
 export default function RegisterUser() {
@@ -41,8 +42,20 @@ export default function RegisterUser() {
     phoneNumber: "",
     password: "",
     role: "Doctor",
+    departmentId: "",
     imagePath: "",
   });
+  const [departments, setDepartments] = useState<Department[]>([]);
+
+  useEffect(() => {
+    departmentAPI
+      .list()
+      .then((list) => {
+        setDepartments(list);
+        setForm((prev) => ({ ...prev, departmentId: prev.departmentId || departmentForRole(list, prev.role) }));
+      })
+      .catch(() => undefined);
+  }, []);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -76,10 +89,11 @@ export default function RegisterUser() {
         phoneNumber: form.phoneNumber,
         password: form.password,
         role: form.role,
+        departmentId: form.departmentId || undefined,
         imagePath: form.imagePath || undefined,
       };
 
-      await API.post("auth/register", payload);
+      await API.post("auth/register-worker", payload);
 
       myswal.fire({
         title: (
@@ -206,13 +220,30 @@ export default function RegisterUser() {
                 System Role *
                 <select
                   value={form.role}
-                  onChange={(e) => setForm({ ...form, role: e.target.value })}
+                  // Picking a role pre-selects its usual department; it can still be changed below.
+                  onChange={(e) => setForm({ ...form, role: e.target.value, departmentId: departmentForRole(departments, e.target.value) || form.departmentId })}
                   required
                   className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm font-normal outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                 >
                   {ROLES.map((r) => (
                     <option key={r.value} value={r.value}>
                       {r.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="text-sm font-medium text-gray-700">
+                Department
+                <select
+                  value={form.departmentId}
+                  onChange={(e) => setForm({ ...form, departmentId: e.target.value })}
+                  className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm font-normal outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                >
+                  <option value="">No department</option>
+                  {departments.map((d) => (
+                    <option key={d.id} value={d.id}>
+                      {d.name}
                     </option>
                   ))}
                 </select>
