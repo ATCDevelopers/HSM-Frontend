@@ -134,18 +134,19 @@ export default function LoginPage() {
       const destination = from ?? getRoleDashboard(user?.role ?? "");
       navigate(destination, { replace: true });
     } catch (err: any) {
-      const backendMessage = err.response?.data?.error;
-      const message =
-        backendMessage ||
-        (err instanceof Error
-          ? err.message
-          : "Login failed. Please try again.");
+      const status = err.response?.status;
+      const backendMessage = err.response?.data?.error || "";
 
-      setError(
-        message.toLowerCase().includes("invalid email or password")
-          ? "Invalid email or password."
-          : message,
-      );
+      if (
+        status === 401 ||
+        backendMessage.toLowerCase().includes("invalid email or password")
+      ) {
+        setError("Invalid email or password.");
+      } else if (status && status >= 500) {
+        setError("Unable to sign in right now due to a server issue. Please try again later.");
+      } else {
+        setError(backendMessage || "Login failed. Please try again.");
+      }
     }
   }
 
